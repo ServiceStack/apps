@@ -1,0 +1,282 @@
+<html>
+<head>
+<title>ServiceStack Apps</title>
+<meta charset="UTF-8">
+<meta name="copyright" content="Copyright 2020. ServiceStack, Inc">
+<link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
+<link rel="stylesheet" href="utils.css">
+<script defer src="https://unpkg.com/@servicestack/client@1.0.39/dist/servicestack-client.umd.js"></script>
+<style>
+a { color: #007bff }
+.container { }
+.w-section,.w-container { width: 900px }
+.invalid-feedback::before{content:"\2718"}
+.is-invalid::after{content:"\2718"}
+.nourl .btn-clear{display:none}
+
+@media (min-width: 414px) {
+    .just-add { display:none }
+    .w-25{width:3.125rem}.h-25{height:3.125rem}
+    .text-3xl{font-size: 1rem;line-height: 1.5rem}
+    .text-6xl { font-size: 1.875rem }
+    .w-section,.w-container { width: 414px }
+}
+@media (min-width: 768px) {
+    .just-add { display:block }
+    .w-25{width:6.25rem}.h-25{height:6.25rem}
+    .text-3xl { font-size: 1.875rem;line-height: 2.25rem }
+    .text-6xl { font-size: 3.75rem;line-height: 1 }
+    .w-section,.w-container { width: 768px }
+}
+@media only screen and (min-width:900px) {
+    .w-section,.w-container { width: 900px }
+}
+</style>
+</head>
+<body class="m-0 font-sans bg-gray-50 nourl">
+<i hidden>{{ '/js/hot-fileloader.js' |> ifDebugIncludeScript }}</i>
+
+<div class="container flex flex-col place-items-center">
+    <h1 class="mt-4 mb-1 text-6xl font-semibold text-center text-gray-700">Instant Client Apps</h1>
+    <small class="just-add mt-1 mb-2 text-base text-gray-400">just add</small>
+
+    <form id="formUrl">
+        <div class="mt-2 w-section flex justify-between">
+            <select id="scheme" class="border py-2 px-3 text-grey-900 text-3xl shadow">
+                <option value="https">https://</option>
+                <option value="http">http://</option>
+            </select>
+            <input id="baseUrl" class="flex-grow border py-2 px-3 text-grey-900 text-3xl shadow" type="text" placeholder="ServiceStack Base URL">
+        </div>
+        <div class="btn-clear absolute text-right w-section">
+            <div title="clear" class="float-right w-6 text-2xl text-gray-500 cursor-pointer" style="margin:-2.85rem 1rem 0 0">&#10005;</div>
+        </div>
+
+        <div class="text-center">
+            <div class="error-summary invalid-feedback my-1"></div>
+            <small class="text-base text-gray-400">
+                try <a href="#techstacks.io">techstacks.io</a>
+            </small>
+        </div>
+    </form>
+
+    <div class="flex justify-evenly langs m-4 w-container">
+        <span data-lang="typescript" class="lang project hell shadow-lg rounded-full cursor-pointer" title="Node.js TypeScript" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/typescript.svg" alt="Node.js logo">
+        </span>
+
+        <span data-lang="csharp" class="lang project shadow-lg rounded-full cursor-pointer" title="C#" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/csharp.svg" alt="C# logo">
+        </span>
+
+        <span data-lang="dart" class="lang shadow-lg rounded-full cursor-pointer" title="Dart" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/dart.svg" alt="Dart logo">
+        </span>
+
+        <span data-lang="java" class="lang shadow-lg rounded-full cursor-pointer" title="Java" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/java.svg" alt="Java logo">
+        </span>
+
+        <span data-lang="kotlin" class="lang shadow-lg rounded-full cursor-pointer" title="Kotlin" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/kotlin.svg" alt="Kotlin logo">
+        </span>
+
+        <span data-lang="swift" class="lang shadow-lg rounded-full cursor-pointer" title="Swift" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/swift.svg" alt="Swift logo">
+        </span>
+
+        <span data-lang="vb" class="lang project shadow-lg rounded-full cursor-pointer" title="VB" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/vb.svg" alt="VB.NET logo">
+        </span>
+
+        <span data-lang="fsharp" class="lang shadow-lg rounded-full cursor-pointer" title="F#" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/fsharp.svg" alt="F# logo">
+        </span>
+    </div>
+    <style>
+        .lang img {
+            transform: scale(.90);
+        }
+        .lang:hover {
+            background-color: #fff;
+        }
+        .lang:active, .lang.active {
+            background-color: #fff;
+            --tw-shadow: inset 0 1px 2px 0 rgba(0,0,0,0.16);box-shadow: var(--tw-ring-offset-shadow,0 0 #0000), var(--tw-ring-shadow,0 0 #0000), var(--tw-shadow);
+        }
+        .nourl .lang {
+            filter: grayscale(100%);
+            opacity: .5;
+            box-shadow: none;
+            cursor: default;
+        }
+    </style>
+</div>
+
+<script>
+let $ = sel => document.querySelector(sel),
+    $$ = sel => document.querySelectorAll(sel);
+
+function on(sel, handlers) {
+    $$(sel).forEach(e => {
+        Object.keys(handlers).forEach(function (evt) {
+            let fn = handlers[evt];
+            if (typeof evt === 'string' && typeof fn === 'function') {
+                e.addEventListener(evt, fn.bind(e));
+            }
+        })
+    });
+}
+
+function urlError(error) {
+    $("#formUrl .invalid-feedback").innerHTML = error.message;
+    if (error.field)
+        $(error.field).classList.add('is-invalid');
+    $("#formUrl").classList.add('error');
+}
+function clearErrors($el) {
+    $el.classList.remove('error');
+    $el.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+    $el.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+}
+function isInteger(str) {
+    let n = Math.floor(Number(str));
+    return n !== Infinity && String(n) === str && n >= 0;
+}
+function urlToSlug(url) {
+    let slug = url;
+    if (slug.startsWith("https://"))
+        slug = slug.substring("https://".length);
+    else if (slug.startsWith("http://"))
+        slug = "http." + slug.substring("http://".length);
+    slug = slug.replace(/\//g, ':');
+    return slug;
+}
+function urlFromSlug(slug) {
+    let url = slug;
+    let isUrl = url.startsWith("https://") || url.startsWith("http://");
+    let firstPos = url.indexOf(':');
+    if (!isUrl && firstPos >= 0)
+    {
+        let atPort = rightPart(url,':');
+        let delim1Pos = atPort.indexOf(':');
+        let delim2Pos = atPort.indexOf('/');
+        let endPos = delim1Pos >= 0 && delim2Pos >= 0
+            ? Math.min(delim1Pos, delim2Pos)
+            : Math.max(delim1Pos, delim2Pos);
+        let testPort = endPos >= 0
+            ? atPort.substring(0,endPos)
+            : atPort.substring(0,atPort.length - 1);
+        url = isInteger(testPort)
+            ? leftPart(url,':') + ':' + atPort.replace(/:/g, '/')
+            : leftPart(url,':') + '/' + atPort.replace(/:/g, '/');
+    }
+    url = decodeURIComponent(url);
+    if (!isUrl)
+    {
+        url = url.startsWith("http.") || url.startsWith("https.")
+            ? leftPart(url,'.') + "://" + rightPart(url,'.')
+            : "https://" + url;
+    }
+    return url;
+}
+
+function handleHash(path) {
+    if (!path) return;
+    let segments = path.split('/');
+    let url = urlFromSlug(segments[0]);
+    let parts = url.split('://');
+    let hasScheme = parts.length > 1;
+    let baseUrl = !hasScheme
+        ? parts[0]
+        : parts[1];
+    if (hasScheme) {
+        let scheme = parts[0];
+        if (scheme !== 'http' && scheme !== 'https') {
+            return urlError({ message:'Invalid Scheme', field:'#scheme' });
+        } else {
+            $('#scheme').value = scheme;
+        }
+    }
+    $('#baseUrl').value = baseUrl;
+    if (segments.length > 1) {
+        let lang = segments[1];
+        let $lang = $(`.lang[data-lang='${lang}']`);
+        if ($lang) $lang.classList.add('active');
+    }
+    onUrlChange();
+}
+
+function clearHash() {
+    history.pushState("", document.title, window.location.pathname + window.location.search);
+}
+function updateHash() {
+    if (document.body.classList.contains('nourl')) {
+        clearHash();
+    } else {
+        let activeLang = $('.lang.active');
+        let url = $('#baseUrl').value;
+        if (url.indexOf('://') === -1)
+            url = $('#scheme').value + '://' + url;
+        let slug = urlToSlug(url);
+        location.hash = activeLang
+            ? `${slug}/${activeLang.getAttribute('data-lang')}`
+            : slug;
+    }
+}
+
+let lastUrl = null;
+function onUrlChange() {
+    let $baseUrl = $('#baseUrl'); 
+    let value = $baseUrl.value;
+    if (value.indexOf('://') >= 0) {
+        $baseUrl.value = rightPart(value,'://');
+        $('#scheme').value = leftPart(value,'://');
+    }
+    if (!value) {
+        document.body.classList.add('nourl');
+    } else {
+        document.body.classList.remove('nourl');
+    }
+    updateHash();
+}
+
+on('#formUrl', { submit: e => { e.preventDefault(); onUrlChange(); } });
+on('#scheme,#baseUrl', { change: onUrlChange });
+on('.btn-clear div', {
+    click: function (e) {
+        $('#baseUrl').value = '';
+        onUrlChange();
+    }
+})
+
+window.onhashchange = function () {
+    handleHash(location.hash.substring(1));
+}
+
+function init() {
+    let { bindHandlers, leftPart, rightPart } = window['@servicestack/client'];
+    Object.assign(window, { leftPart, rightPart });
+
+    if (location.hash) {
+        handleHash(location.hash.substring(1));
+    }
+    bindHandlers({
+        selectLang: function (e) {
+            $$('.lang.active').forEach(el => {
+                if (el !== this) {
+                    el.classList.remove('active');
+                }
+            });
+            this.classList.toggle('active');
+            updateHash();
+        }
+    });
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RFJMWNBD9F"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-RFJMWNBD9F');</script>
+</body>
+</html>
