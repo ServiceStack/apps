@@ -16,15 +16,6 @@ namespace Apps.ServiceInterface
         public string Request { get; set; }
     }
 
-    public class LangInfo
-    {
-        public string Code { get; set; }
-        public string Name { get; set; }
-        public string Ext { get; set; }
-        public string LineComment { get; set; } = "//";
-        public Dictionary<string, string> Files { get; set; } = new();
-    }
-    
     [Route("/gists/files/{Slug}/{Lang}/{File}")]
     public class GistRefFile
     {
@@ -37,72 +28,14 @@ namespace Apps.ServiceInterface
     {
         public Sites Sites { get; set; }
 
-        private static LangInfo CSharp = new() {
-            Code = "csharp",
-            Name = "C#",
-            Ext = "cs",
-            Files = {
-                ["MyApp.csproj"] = @"<Project Sdk=""Microsoft.NET.Sdk"">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <NoWarn>1591</NoWarn>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include=""ServiceStack.Client"" Version=""5.*"" />
-  </ItemGroup>
-
-</Project>",
-                ["Program.cs"] = @"using MyApp;
-using ServiceStack;
-using ServiceStack.Text;
-
-var client = new JsonServiceClient({BASE_URL});
-
-{API_COMMENT}var response = client.Get(new {REQUEST} {
-{API_COMMENT}});
-{API_COMMENT}response.PrintDump();
-"
-            }
-        };
-        private static LangInfo TypeScript = new() {
-            Code = "typescript",
-            Name = "TypeScript",
-            Ext = "ts",
-        };
-        private static LangInfo Swift = new() {
-            Code = "swift",
-            Name = "Swift",
-            Ext = "swift",
-        };
-        private static LangInfo Java = new() {
-            Code = "java",
-            Name = "Java",
-            Ext = "java",
-        };
-        private static LangInfo Kotlin = new() {
-            Code = "kotlin",
-            Name = "Kotlin",
-            Ext = "kt",
-        };
-        private static LangInfo Dart = new() {
-            Code = "dart",
-            Name = "Dart",
-            Ext = "dart",
-        };
-        private static LangInfo FSharp = new() {
-            Code = "fsharp",
-            Name = "F#",
-            Ext = "fs",
-        };
-        private static LangInfo VbNet = new() {
-            Code = "vbnet",
-            Name = "VB.NET",
-            Ext = "vb",
-            LineComment = "'",
-        };
+        private static LangInfo CSharp = new CSharpLangInfo();
+        private static LangInfo TypeScript = new TypeScriptLangInfo();
+        private static LangInfo Swift = new SwiftLangInfo();
+        private static LangInfo Java = new JavaLangInfo();
+        private static LangInfo Kotlin = new KotlinLangInfo();
+        private static LangInfo Dart = new DartLangInfo();
+        private static LangInfo FSharp = new FSharpLangInfo();
+        private static LangInfo VbNet = new VbNetLangInfo();
         
         private static Dictionary<string, LangInfo> LangAliases { get; set; } = new() {
             ["csharp"] = CSharp,
@@ -135,6 +68,14 @@ var client = new JsonServiceClient({BASE_URL});
             var requestDto = string.IsNullOrEmpty(request.Request)
                 ? null
                 : request.Request;
+            Dictionary<string, string> args = null;
+            if (requestDto != null && requestDto.IndexOf('(') >= 0)
+            {
+                var kvps = requestDto.RightPart('(');
+                kvps = '{' +kvps.Substring(0, kvps.Length - 1).Replace('=',':') + '}';
+                args = kvps.FromJsv<Dictionary<string, string>>();
+                requestDto = requestDto.LeftPart('(');
+            }
 
             var baseUrl = request.Slug;
             if (baseUrl.IndexOf("://", StringComparison.Ordinal) == -1)
@@ -145,23 +86,33 @@ var client = new JsonServiceClient({BASE_URL});
                     baseUrl = "https://" + baseUrl;
             }
 
-            var key = $"{nameof(GistRef)}:{baseUrl}:{lang.Code}:{requestDto}.gist";
+            var key = $"{nameof(GistRef)}:{baseUrl}:{lang.Code}:{request.Request??"*"}.gist";
             var gist = await CacheAsync.GetOrCreateAsync(key, TimeSpan.FromMinutes(10), async () => {
                 var site = await Sites.GetSiteAsync(request.Slug);
                 var langInfo = await site.Languages.GetLanguageInfoAsync(request.Lang);
+                var baseUrlTitle = baseUrl.RightPart("://").LeftPart("/");
                 if (requestDto != null)
+                {
+                    baseUrlTitle += $" {requestDto}";
                     langInfo = await langInfo.ForRequestAsync(requestDto);
+                }
                 var langTypesContent = langInfo.Content;
                 
-                var baseUrlTitle = baseUrl.RightPart("://").LeftPart("/");
                 var files = new Dictionary<string, GistFile>();
+                var description = $"{baseUrlTitle} {lang.Name} API";
                 lang.Files.Each((k, v) => {
+                    var content = v
+                        .Replace("{BASE_URL}", baseUrl)
+                        .Replace("{REQUEST}", requestDto ?? "MyRequest")
+                        .Replace("{API_COMMENT}", request.Request != null ? "" : lang.LineComment)
+                        .Replace("{DESCRIPTION}",description)
+                        .Replace("{INSPECT_VARS}", requestDto != null ? lang.InspectVarsResponse : null);
+                    content = args != null
+                        ? content.Replace("{REQUEST_BODY}", lang.RequestBody(requestDto, args, site.Metadata.Api))
+                        : content.Replace("{REQUEST_BODY}", "");
                     var file = new GistFile {
                         Filename = k,
-                        Content = v
-                            .Replace("{BASE_URL}", '"' + baseUrl + '"')
-                            .Replace("{REQUEST}", requestDto ?? "MyRequest")
-                            .Replace("{API_COMMENT}", request.Request != null ? "" : lang.LineComment),
+                        Content = content,
                         Type = MimeTypes.PlainText,
                         Raw_Url = new GistRefFile { Slug = request.Slug, Lang = lang.Code, File = k }.ToAbsoluteUri(Request),
                     };
@@ -177,7 +128,7 @@ var client = new JsonServiceClient({BASE_URL});
                     Raw_Url = langInfo.Url,
                 };
                 var to = new GithubGist {
-                    Description = $"{baseUrlTitle} {lang.Name} API",
+                    Description = description,
                     Created_At = DateTime.UtcNow,
                     Files = files,
                     Public = true,

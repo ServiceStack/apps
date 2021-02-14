@@ -61,12 +61,12 @@ a { color: #007bff }
     </form>
 
     <div class="flex justify-evenly langs m-4 w-container">
-        <span data-lang="typescript" class="lang project hell shadow-lg rounded-full cursor-pointer" title="Node.js TypeScript" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/typescript.svg" alt="Node.js logo">
-        </span>
-
         <span data-lang="csharp" class="lang project shadow-lg rounded-full cursor-pointer" title="C#" data-click="selectLang">
             <img class="w-25 h-25" src="assets/img/csharp.svg" alt="C# logo">
+        </span>
+
+        <span data-lang="typescript" class="lang project hell shadow-lg rounded-full cursor-pointer" title="Node.js TypeScript" data-click="selectLang">
+            <img class="w-25 h-25" src="assets/img/typescript.svg" alt="Node.js logo">
         </span>
 
         <span data-lang="dart" class="lang shadow-lg rounded-full cursor-pointer" title="Dart" data-click="selectLang">
@@ -148,13 +148,19 @@ function urlToSlug(url) {
     if (slug.startsWith("https://"))
         slug = slug.substring("https://".length);
     else if (slug.startsWith("http://"))
-        slug = "http." + slug.substring("http://".length);
+        slug = "http:" + slug.substring("http://".length);
     slug = slug.replace(/\//g, ':');
     return slug;
 }
 function urlFromSlug(slug) {
     let url = slug;
     let isUrl = url.startsWith("https://") || url.startsWith("http://");
+    let scheme = !isUrl && (url.startsWith("http:") || url.startsWith("https:"))
+        ? leftPart(url,':')
+        : null;
+    if (scheme != null)
+        url = rightPart(url,':');
+
     let firstPos = url.indexOf(':');
     if (!isUrl && firstPos >= 0)
     {
@@ -172,10 +178,9 @@ function urlFromSlug(slug) {
             : leftPart(url,':') + '/' + atPort.replace(/:/g, '/');
     }
     url = decodeURIComponent(url);
-    if (!isUrl)
-    {
-        url = url.startsWith("http.") || url.startsWith("https.")
-            ? leftPart(url,'.') + "://" + rightPart(url,'.')
+    if (!isUrl) {
+        url = scheme != null
+            ? scheme + "://" + url
             : "https://" + url;
     }
     return url;

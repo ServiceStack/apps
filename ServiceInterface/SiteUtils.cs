@@ -11,15 +11,21 @@ namespace Apps.ServiceInterface
         /// <summary>
         /// Allow slugs to capture URLs, Examples:
         /// techstacks.io                  => https://techstacks.io
-        /// http.techstacks.io             => http://techstacks.io
+        /// http:techstacks.io             => http://techstacks.io
         /// techstacks.io:1000             => https://techstacks.io:1000
         /// techstacks.io:1000:site1:site2 => https://techstacks.io:1000/site1/site2
         /// techstacks.io:site1%7Csite2    => https://techstacks.io/site1|site2
         /// </summary>
-        public static string UrlFromSlug(this string slug)
+        public static string UrlFromSlug(string slug)
         {
             var url = slug;
             var isUrl = url.StartsWith("https://") || url.StartsWith("http://");
+            var scheme = !isUrl && (url.StartsWith("http:") || url.StartsWith("https:"))
+                ? url.LeftPart(':')
+                : null;
+            if (scheme != null)
+                url = url.RightPart(':');
+            
             var firstPos = url.IndexOf(':');
             if (!isUrl && firstPos >= 0)
             {
@@ -39,8 +45,8 @@ namespace Apps.ServiceInterface
             url = url.UrlDecode();
             if (!isUrl)
             {
-                url = url.StartsWith("http.") || url.StartsWith("https.")
-                    ? url.LeftPart('.') + "://" + url.RightPart('.')
+                url = scheme != null
+                    ? scheme + "://" + url
                     : "https://" + url;
             }
             return url;
@@ -49,23 +55,23 @@ namespace Apps.ServiceInterface
         /// <summary>
         /// Convert URL to URL-friendly slugs, Examples:
         /// https://techstacks.io                  => techstacks.io 
-        /// http://techstacks.io                   => http.techstacks.io 
+        /// http://techstacks.io                   => http:techstacks.io 
         /// https://techstacks.io:1000             => techstacks.io:1000 
         /// https://techstacks.io:1000/site1/site2 => techstacks.io:1000:site1:site2 
         /// https://techstacks.io/site1|site2      => techstacks.io:site|site2 
         /// </summary>
-        public static string UrlToSlug(this string url)
+        public static string UrlToSlug(string url)
         {
             var slug = url;
             if (slug.StartsWith("https://"))
                 slug = slug.Substring("https://".Length);
             else if (slug.StartsWith("http://"))
-                slug = "http." + slug.Substring("http://".Length);
+                slug = "http:" + slug.Substring("http://".Length);
             slug = slug.Replace('/', ':');
             return slug;
         }
         
-        public static string ToUrlEncoded(this List<string> args)
+        public static string ToUrlEncoded(List<string> args)
         {
             if (!args.IsEmpty())
             {
@@ -104,7 +110,8 @@ namespace Apps.ServiceInterface
                 string ssMetadata;
                 try
                 {
-                    ssMetadata = await baseUrl.CombineWith("/metadata").GetStringFromUrlAsync();
+                    ssMetadata = await baseUrl.CombineWith("/metadata")
+                        .GetStringFromUrlAsync(requestFilter:req => req.UserAgent = "ServiceStack");
                 }
                 catch (Exception ssEx)
                 {

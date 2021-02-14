@@ -32,15 +32,19 @@ namespace Apps.ServiceInterface
         {
             try
             {
-                var langTypesUrl = Site.BaseUrl.CombineWith("types", lang) + "?GlobalNamespace=MyApp";
+                var langTypesUrl = Site.BaseUrl.CombineWith("types", lang);
+                var useGlobalNs = lang == "csharp" || lang == "fsharp" || lang == "vbnet"; 
+                if (useGlobalNs)
+                    langTypesUrl += "?GlobalNamespace=MyApp";
+                
                 if (requestDto != null)
-                    langTypesUrl = $"{langTypesUrl}&IncludeTypes={requestDto}.*";
+                    langTypesUrl += (useGlobalNs ? "&" : "?") + $"IncludeTypes={requestDto}.*";
 
                 var content = await langTypesUrl
                     .GetStringFromUrlAsync(requestFilter:req => req.UserAgent = "apps.servicestack.net");
                 return new LanguageInfo(this, lang, langTypesUrl, content);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }
@@ -126,7 +130,7 @@ namespace Apps.ServiceInterface
             if (site != null)
                 return site;
 
-            var useBaseUrl = slug.UrlFromSlug();
+            var useBaseUrl = SiteUtils.UrlFromSlug(slug);
             var appMetadata = await useBaseUrl.GetAppMetadataAsync();
             
             var siteInfo = new SiteInfo {

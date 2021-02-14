@@ -41,7 +41,7 @@ namespace Apps.ServiceInterface
             if (string.IsNullOrEmpty(request.BaseUrl) && string.IsNullOrEmpty(request.Slug))
                 throw new ArgumentNullException(nameof(request.BaseUrl));
             
-            var slug = request.Slug ?? request.BaseUrl.UrlToSlug();
+            var slug = request.Slug ?? SiteUtils.UrlToSlug(request.BaseUrl);
             var site = await Sites.GetSiteAsync(slug);
 
             var languageInfos = await site.Languages.GetLanguageInfosAsync();
@@ -51,7 +51,7 @@ namespace Apps.ServiceInterface
                 languages[entry.Key] = entry.Value.Content;
             }
             return new GetSiteInfoLanguagesResponse {
-                BaseUrl = request.BaseUrl ?? slug.UrlFromSlug(),
+                BaseUrl = request.BaseUrl ?? SiteUtils.UrlFromSlug(slug),
                 Slug = slug,
                 Languages = languages,
             };
@@ -68,7 +68,7 @@ namespace Apps.ServiceInterface
                 throw new ArgumentNullException(nameof(request.Request));
 
             var url = CreateSiteRequestUrl(site, request.Request);
-            var qs = request.Args.ToUrlEncoded();
+            var qs = SiteUtils.ToUrlEncoded(request.Args);
             var sendInBody = HttpUtils.HasRequestBody(Request.Verb);
             if (!string.IsNullOrEmpty(qs) && !sendInBody)
             {
@@ -96,7 +96,7 @@ namespace Apps.ServiceInterface
                 throw new ArgumentNullException(nameof(request.Request));
 
             var url = CreateSiteRequestUrl(site, request.Request);
-            var qs = request.Query.ToUrlEncoded();
+            var qs = SiteUtils.ToUrlEncoded(request.Query);
             if (!string.IsNullOrEmpty(qs))
                 url += "?" + qs;
 
