@@ -119,7 +119,7 @@ namespace Apps.ServiceInterface
                     file.Size = file.Content.Length;
                     files[k] = file;
                 });
-                var dtoFileName = $"dtos.{lang.Ext}";
+                var dtoFileName = $"{lang.DtosPathPrefix}dtos.{lang.Ext}";
                 files[dtoFileName] = new GistFile {
                     Filename = dtoFileName,
                     Content = langTypesContent,
