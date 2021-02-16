@@ -36,9 +36,11 @@ namespace Apps.ServiceInterface
                 var useGlobalNs = lang == "csharp" || lang == "fsharp" || lang == "vbnet"; 
                 if (useGlobalNs)
                     langTypesUrl += "?GlobalNamespace=MyApp";
+                if (lang == "java" || lang == "kotlin")
+                    langTypesUrl += "?Package=myapp";
                 
                 if (requestDto != null)
-                    langTypesUrl += (useGlobalNs ? "&" : "?") + $"IncludeTypes={requestDto}.*";
+                    langTypesUrl += (langTypesUrl.IndexOf('?') >= 0 ? "&" : "?") + $"IncludeTypes={requestDto}.*";
 
                 var content = await langTypesUrl
                     .GetStringFromUrlAsync(requestFilter:req => req.UserAgent = "apps.servicestack.net");

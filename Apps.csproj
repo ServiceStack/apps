@@ -12,8 +12,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="files\java" />
     <Folder Include="wwwroot\explorer" />
     <Folder Include="wwwroot\projects" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="files\java\gradlew.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="files\java\gradlew">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="files\kotlin\gradlew.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="files\kotlin\gradlew">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -1,19 +1,22 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ServiceStack;
+using ServiceStack.IO;
 using ServiceStack.Text;
 
 namespace Apps.ServiceInterface
 {
     [Route("/gists")]
     [Route("/gists/{Slug}/{Lang}")]
-    [Route("/gists/{Slug}/{Lang}/{Request}")]
+    [Route("/gists/{Slug}/{Lang}/{IncludeTypes}")]
     public class GistRef
     {
         public string Slug { get; set; }
         public string Lang { get; set; }
-        public string Request { get; set; }
+        public string IncludeTypes { get; set; }
+        public bool NoCache { get; set; }
     }
 
     [Route("/gists/files/{Slug}/{Lang}/{File}")]
@@ -64,17 +67,20 @@ namespace Apps.ServiceInterface
                 throw new ArgumentNullException(nameof(request.Lang));
             if (!LangAliases.TryGetValue(request.Lang, out var lang))
                 throw UnknownLanguageError();
-
-            var requestDto = string.IsNullOrEmpty(request.Request)
+            
+            var includeTypes = string.IsNullOrEmpty(request.IncludeTypes)
                 ? null
-                : request.Request;
+                : request.IncludeTypes;
+
+            var requestDto = includeTypes;
             Dictionary<string, string> args = null;
-            if (requestDto != null && requestDto.IndexOf('(') >= 0)
+            if (includeTypes != null && includeTypes.IndexOf('(') >= 0)
             {
-                var kvps = requestDto.RightPart('(');
+                var kvps = includeTypes.RightPart('(');
                 kvps = '{' +kvps.Substring(0, kvps.Length - 1).Replace('=',':') + '}';
                 args = kvps.FromJsv<Dictionary<string, string>>();
-                requestDto = requestDto.LeftPart('(');
+                includeTypes = includeTypes.LeftPart('(');
+                requestDto = includeTypes.LastRightPart(',');
             }
 
             var baseUrl = request.Slug;
@@ -86,25 +92,29 @@ namespace Apps.ServiceInterface
                     baseUrl = "https://" + baseUrl;
             }
 
-            var key = $"{nameof(GistRef)}:{baseUrl}:{lang.Code}:{request.Request??"*"}.gist";
+            var key = $"{nameof(GistRef)}:{baseUrl}:{lang.Code}:{request.IncludeTypes??"*"}.gist";
+            if (request.NoCache)
+                await CacheAsync.RemoveAsync(key);
             var gist = await CacheAsync.GetOrCreateAsync(key, TimeSpan.FromMinutes(10), async () => {
                 var site = await Sites.GetSiteAsync(request.Slug);
                 var langInfo = await site.Languages.GetLanguageInfoAsync(request.Lang);
                 var baseUrlTitle = baseUrl.RightPart("://").LeftPart("/");
-                if (requestDto != null)
+                if (includeTypes != null)
                 {
                     baseUrlTitle += $" {requestDto}";
-                    langInfo = await langInfo.ForRequestAsync(requestDto);
+                    langInfo = await langInfo.ForRequestAsync(includeTypes);
                 }
                 var langTypesContent = langInfo.Content;
                 
                 var files = new Dictionary<string, GistFile>();
                 var description = $"{baseUrlTitle} {lang.Name} API";
+                var requestOp = site.Metadata.Api.Operations.FirstOrDefault(x => x.Request.Name == requestDto); 
                 lang.Files.Each((k, v) => {
                     var content = v
                         .Replace("{BASE_URL}", baseUrl)
                         .Replace("{REQUEST}", requestDto ?? "MyRequest")
-                        .Replace("{API_COMMENT}", request.Request != null ? "" : lang.LineComment)
+                        .Replace("{RESPONSE}", lang.GetResponse(requestOp))
+                        .Replace("{API_COMMENT}", request.IncludeTypes != null ? "" : lang.LineComment)
                         .Replace("{DESCRIPTION}",description)
                         .Replace("{INSPECT_VARS}", requestDto != null ? lang.InspectVarsResponse : null);
                     content = args != null
@@ -119,6 +129,17 @@ namespace Apps.ServiceInterface
                     file.Size = file.Content.Length;
                     files[k] = file;
                 });
+
+                var langFiles = VirtualFiles.GetDirectory($"files/{lang.Code}");
+                if (langFiles != null)
+                {
+                    foreach (var file in langFiles.GetAllFiles())
+                    {
+                        var content = file.ReadAllText();
+                        lang.Files[file.Name] = content;
+                    }
+                }
+                
                 var dtoFileName = $"{lang.DtosPathPrefix}dtos.{lang.Ext}";
                 files[dtoFileName] = new GistFile {
                     Filename = dtoFileName,

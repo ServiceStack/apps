@@ -2,6 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ServiceStack;
+using ServiceStack.NativeTypes.CSharp;
+using ServiceStack.NativeTypes.Dart;
+using ServiceStack.NativeTypes.FSharp;
+using ServiceStack.NativeTypes.Java;
+using ServiceStack.NativeTypes.Kotlin;
+using ServiceStack.NativeTypes.Swift;
+using ServiceStack.NativeTypes.TypeScript;
+using ServiceStack.NativeTypes.VbNet;
 using ServiceStack.Text;
 
 namespace Apps.ServiceInterface
@@ -41,6 +49,9 @@ var client = new JsonServiceClient(""{BASE_URL}"");
             };
             InspectVarsResponse = "\nInspect.vars(new { response });";
         }
+
+        private CSharpGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
     }
 
     public class TypeScriptLangInfo : LangInfo
@@ -96,6 +107,8 @@ let client = new JsonServiceClient('{BASE_URL}');
             };
             InspectVarsResponse = "Inspect.vars({ response });";
         }
+        private TypeScriptGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"    {prop.Name.ToCamelCase()}: {propValue},";
@@ -144,12 +157,165 @@ dev_dependencies:
             };
             InspectVarsResponse = "Inspect.vars({'response': response});";
         }
+        
+        private DartGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"    ..{prop.Name.ToCamelCase()} = {propValue}";
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "[" + collectionBody + "]";
+    }
+
+    public class JavaLangInfo : LangInfo
+    {
+        public JavaLangInfo()
+        {
+            Code = "java";
+            Name = "Java";
+            Ext = "java";
+            DtosPathPrefix = "src\\main\\java\\myapp\\";
+            Files = new Dictionary<string, string> {
+                ["src\\main\\java\\myapp\\App.java"] = @"package myapp;
+
+import net.servicestack.client.JsonServiceClient;
+import net.servicestack.gistcafe.Inspect;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+
+import static myapp.dtos.*;
+
+public class App {
+
+    public static void main(String[] args) {
+
+        JsonServiceClient client = new JsonServiceClient(""{BASE_URL}"");
+
+        {API_COMMENT}{RESPONSE} response = client.send(({REQUEST}) new {REQUEST}(){REQUEST_BODY});
+
+        {API_COMMENT}Inspect.printDump(response);
+        {INSPECT_VARS}
+    }
+}
+",
+                ["gradle\\wrapper\\gradle-wrapper.properties"] = @"distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-6.7-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists",
+                ["build.gradle"] = @"plugins {
+    id 'application'
+}
+
+group 'myapp'
+version '1.0-SNAPSHOT'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'net.servicestack:client:1.0.43'
+    implementation 'net.servicestack:gistcafe:0.0.7'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+application {
+    mainClass = 'myapp.App'
+}
+",
+            };
+            InspectVarsResponse = "Inspect.vars(Collections.singletonMap(\"response\", response));";
+        }
+        private JavaGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+
+        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+            $"            .set{prop.Name.ToPascalCase()}({propValue})";
+
+        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
+            "new ArrayList(Arrays.asList(" + collectionBody + "))";
+    }
+
+    public class KotlinLangInfo : LangInfo
+    {
+        public KotlinLangInfo()
+        {
+            Code = "kotlin";
+            Name = "Kotlin";
+            Ext = "kt";
+            DtosPathPrefix = "src\\main\\kotlin\\myapp\\";
+            Files = new Dictionary<string, string> {
+                ["src\\main\\kotlin\\myapp\\App.kt"] = @"package myapp
+import net.servicestack.client.JsonServiceClient
+import net.servicestack.gistcafe.Inspect
+
+fun main(args: Array<String>) {
+    val client = JsonServiceClient(""{BASE_URL}"")
+
+    {API_COMMENT}val response = client.send({REQUEST}().apply {{REQUEST_BODY}
+    {API_COMMENT}});
+
+    Inspect.printDump(response)
+    {INSPECT_VARS}
+}
+",
+                ["gradle\\wrapper\\gradle-wrapper.properties"] = @"distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-6.7-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists",
+                ["build.gradle.kts"] = @"plugins {
+    java
+    maven
+    application
+    kotlin(""jvm"") version ""1.4.21""
+}
+
+group = ""myapp""
+version = ""1.0-SNAPSHOT""
+
+application {
+    mainClass.set(""myapp.AppKt"")
+}
+
+repositories {
+    mavenCentral()
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+dependencies {
+    implementation(kotlin(""stdlib""))
+    implementation(""com.google.code.gson:gson:2.8.6"")
+    implementation(""net.servicestack:client:1.0.43"")
+    implementation(""net.servicestack:gistcafe:0.0.7"")
+    testImplementation(platform(""org.junit:junit-bom:5.7.0""))
+    testImplementation(""org.junit.jupiter:junit-jupiter"")
+}
+",
+            };
+            InspectVarsResponse = "Inspect.vars(mapOf(\"response\" to response))";
+        }
+        private KotlinGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+
+        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+            $"        {prop.Name.ToCamelCase()} = {propValue}";
+
+        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
+            "arrayListOf(" + collectionBody + ")";
     }
 
     public class SwiftLangInfo : LangInfo
@@ -160,26 +326,8 @@ dev_dependencies:
             Name = "Swift";
             Ext = "swift";
         }
-    }
-
-    public class JavaLangInfo : LangInfo
-    {
-        public JavaLangInfo()
-        {
-            Code = "java";
-            Name = "Java";
-            Ext = "java";
-        }
-    }
-
-    public class KotlinLangInfo : LangInfo
-    {
-        public KotlinLangInfo()
-        {
-            Code = "kotlin";
-            Name = "Kotlin";
-            Ext = "kt";
-        }
+        private SwiftGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
     }
 
     public class FSharpLangInfo : LangInfo
@@ -190,6 +338,8 @@ dev_dependencies:
             Name = "F#";
             Ext = "fs";
         }
+        private FSharpGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
     }
 
     public class VbNetLangInfo : LangInfo
@@ -201,9 +351,11 @@ dev_dependencies:
             Ext = "vb";
             LineComment = "'";
         }
+        private VbNetGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
     }
 
-    public class LangInfo
+    public abstract class LangInfo
     {
         public string Code { get; set; }
         public string Name { get; set; }
@@ -345,6 +497,21 @@ dev_dependencies:
             return isArray
                 ? "new[] { " + collectionBody + " }"
                 : "new " + collectionType + " { " + collectionBody + " }";
+        }
+
+        public abstract string GetTypeName(string typeName, string[] genericArgs);
+
+        public virtual string GetResponse(MetadataOperationType op)
+        {
+            if (op?.Response != null)
+            {
+                var genericArgs = op.Response.Name.IndexOf('`') >= 0 && op.Response.GenericArgs[0] == "'T" && op.DataModel != null
+                    ? new[] { op.DataModel.Name }
+                    : op.Response.GenericArgs;
+                var typeName = GetTypeName(op.Response.Name, genericArgs);
+                return typeName;
+            }
+            return "var";
         }
     }
 }
