@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ServiceStack;
 using ServiceStack.NativeTypes.CSharp;
@@ -265,7 +266,7 @@ fun main(args: Array<String>) {
     {API_COMMENT}val response = client.send({REQUEST}().apply {{REQUEST_BODY}
     {API_COMMENT}});
 
-    Inspect.printDump(response)
+    {API_COMMENT}Inspect.printDump(response)
     {INSPECT_VARS}
 }
 ",
@@ -325,21 +326,47 @@ dependencies {
             Code = "swift";
             Name = "Swift";
             Ext = "swift";
+            DtosPathPrefix = "Sources\\MyApp\\";
+            Files = new Dictionary<string, string> {
+                ["Sources\\MyApp\\main.swift"] = @"import Foundation
+import ServiceStack
+import gistcafe
+
+let client = JsonServiceClient(baseUrl: ""{BASE_URL}"")
+
+{API_COMMENT}let request = {REQUEST}(){REQUEST_BODY}
+{API_COMMENT}client.sendAsync(request)
+    {API_COMMENT}.then (response:{RESPONSE}) { 
+        {API_COMMENT}Inspect.printDump(response)
+        {INSPECT_VARS}
+    {API_COMMENT}}
+",
+                ["Package.swift"] = @"import PackageDescription
+
+let package = Package(
+    name: ""MyApp"",
+    dependencies: [
+        .package(name: ""ServiceStack"", url: ""https://github.com/ServiceStack/ServiceStack.Swift"", from: ""1.0.0""),
+        .package(name: ""gistcafe"", url: ""https://github.com/ServiceStack/gistcafe-swift.git"", from: ""1.0.0""),
+    ],
+    targets: [
+        .target(
+            name: ""MyApp"",
+            dependencies: [""ServiceStack"",""gistcafe""]),
+    ]
+)
+",
+            };
+            InspectVarsResponse = @"Inspect.vars([""response"":response])";
         }
         private SwiftGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
-    }
 
-    public class FSharpLangInfo : LangInfo
-    {
-        public FSharpLangInfo()
-        {
-            Code = "fsharp";
-            Name = "F#";
-            Ext = "fs";
-        }
-        private FSharpGenerator Gen => new(new MetadataTypesConfig());
-        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+            $"request.{prop.Name.ToCamelCase()} = {propValue}";
+
+        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
+            "[" + collectionBody + "]";
     }
 
     public class VbNetLangInfo : LangInfo
@@ -350,9 +377,131 @@ dependencies {
             Name = "VB.NET";
             Ext = "vb";
             LineComment = "'";
+            Files = new Dictionary<string, string> {
+                ["MyApp.vbproj"] = @"<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include=""ServiceStack.Client"" Version=""5.*"" />
+    <PackageReference Include=""ServiceStack.Common"" Version=""5.*"" />
+  </ItemGroup>
+
+</Project>",
+                ["Program.vb"] = @"Imports ServiceStack
+Imports ServiceStack.Text
+Imports MyApp
+
+Module Program
+
+    Sub Main(args As String())
+
+        Dim client = New JsonServiceClient(""{BASE_URL}"")
+
+        {API_COMMENT}Dim response = client.Send(New {REQUEST}(){REQUEST_BODY})
+            
+        {API_COMMENT}response.PrintDump()
+        {INSPECT_VARS}
+
+    End Sub
+
+End Module
+"
+            };
+            InspectVarsResponse = "Inspect.vars(New With { response })";
         }
         private VbNetGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+
+        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+            $"            .{Gen.EscapeKeyword(prop.Name)} = {propValue},";
+
+        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => isArray 
+            ? $"New {GetTypeName(collectionType, new string[0])}() {{" + collectionBody + "}"
+            : $"New {collectionType}() From {{" + collectionBody + "}";
+
+        public override string RequestBodyFilter(string assignments)
+        {
+            var to = assignments.TrimEnd();
+            if (to.EndsWith(","))
+                to = to.Substring(0, to.Length - 1);
+
+            return " With {" + to + "\n        }";
+        }
+    }
+
+    public class FSharpLangInfo : LangInfo
+    {
+        public FSharpLangInfo()
+        {
+            Code = "fsharp";
+            Name = "F#";
+            Ext = "fs";
+            ItemsSep = ';';
+            Files = new Dictionary<string, string> {
+                ["MyApp.fsproj"] = @"<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <NoWarn>1591,FS0058</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include=""ServiceStack.Client"" Version=""5.*"" />
+    <PackageReference Include=""ServiceStack.Common"" Version=""5.*"" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include=""dtos.fs"" />
+    <Compile Include=""Program.fs"" />
+  </ItemGroup>
+
+</Project>",
+                ["Program.fs"] = @"open System
+open System.Linq
+open ServiceStack
+open ServiceStack.Text
+open MyApp
+
+module Program =
+
+    [<EntryPoint>]
+    let main args =
+
+        let client = new JsonServiceClient(""{BASE_URL}"")
+
+        let response = client.Send(new {REQUEST}({REQUEST_BODY}))
+
+        {API_COMMENT}response.PrintDump()
+        {INSPECT_VARS}
+
+        0 //exitCode
+"
+            };
+            InspectVarsResponse = "Inspect.vars({| response = response |})";
+        }
+        private FSharpGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+
+        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+            $"            {prop.Name} = {propValue},";
+
+        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => isArray 
+            ? $"[| " + collectionBody + " |]"
+            : $"new {collectionType}([ " + collectionBody + "]";
+
+        public override string RequestBodyFilter(string assignments)
+        {
+            var to = assignments.TrimEnd();
+            return to.EndsWith(",") 
+                ? to.Substring(0, to.Length - 1) 
+                : to;
+        }
     }
 
     public abstract class LangInfo
@@ -363,6 +512,7 @@ dependencies {
         public string DtosPathPrefix { get; set; } = "";
         public string LineComment { get; set; } = "//";
         public string InspectVarsResponse { get; set; }
+        public char ItemsSep { get; set; } = ',';
         public Dictionary<string, string> Files { get; set; } = new();
 
         public virtual string RequestBody(string requestDto, Dictionary<string, string> args, MetadataTypes types)
@@ -389,11 +539,13 @@ dependencies {
                 }
 
                 var props = StringBuilderCache.ReturnAndFree(sb);
-                return props.TrimEnd();
+                return RequestBodyFilter(props);
             }
 
             return "";
         }
+
+        public virtual string RequestBodyFilter(string assignments) => assignments.TrimEnd();
 
         public virtual string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"    {prop.Name} = {propValue},";
@@ -429,12 +581,12 @@ dependencies {
                     };
                     var literalValue = GetLiteralValue(item, itemProp, types);
                     if (sb.Length > 0)
-                        sb.Append(", ");
+                        sb.Append($"{ItemsSep} ");
                     sb.Append(literalValue);
                 }
 
                 var collectionBody = StringBuilderCacheAlt.ReturnAndFree(sb);
-                return GetLiteralCollection(isArray, collectionBody, collectionType);
+                return GetLiteralCollection(isArray, collectionBody, collectionType ?? useType);
             }
             if (enumType != null)
                 return GetEnumLiteral(value, enumType);
