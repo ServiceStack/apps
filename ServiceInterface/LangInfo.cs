@@ -193,7 +193,8 @@ public class App {
 
     public static void main(String[] args) {
 
-        JsonServiceClient client = new JsonServiceClient(""{BASE_URL}"");
+        JsonServiceClient client = new JsonServiceClient(
+            ""{BASE_URL}"");
 
         {API_COMMENT}{RESPONSE} response = client.send(({REQUEST}) new {REQUEST}(){REQUEST_BODY});
 
@@ -328,33 +329,32 @@ dependencies {
             Ext = "swift";
             DtosPathPrefix = "Sources\\MyApp\\";
             Files = new Dictionary<string, string> {
-                ["Sources\\MyApp\\main.swift"] = @"import Foundation
-import ServiceStack
-import gistcafe
-
-let client = JsonServiceClient(baseUrl: ""{BASE_URL}"")
-
-{API_COMMENT}let request = {REQUEST}(){REQUEST_BODY}
-{API_COMMENT}client.sendAsync(request)
-    {API_COMMENT}.then (response:{RESPONSE}) { 
-        {API_COMMENT}Inspect.printDump(response)
-        {INSPECT_VARS}
-    {API_COMMENT}}
-",
                 ["Package.swift"] = @"import PackageDescription
 
 let package = Package(
     name: ""MyApp"",
     dependencies: [
-        .package(name: ""ServiceStack"", url: ""https://github.com/ServiceStack/ServiceStack.Swift"", from: ""1.0.0""),
-        .package(name: ""gistcafe"", url: ""https://github.com/ServiceStack/gistcafe-swift.git"", from: ""1.0.0""),
-    ],
+        .package(name: ""ServiceStack"", url: ""https://github.com/ServiceStack/ServiceStack.Swift.git"", 
+            Version(5,0,0)..<Version(6,0,0))
+        ],
     targets: [
         .target(
             name: ""MyApp"",
-            dependencies: [""ServiceStack"",""gistcafe""]),
+            dependencies: [""ServiceStack""]),
     ]
 )
+",
+                ["Sources\\MyApp\\main.swift"] = @"import Foundation
+import ServiceStack
+
+let client = JsonServiceClient(baseUrl: ""{BASE_URL}"")
+
+{API_COMMENT}let request = {REQUEST}(){REQUEST_BODY}
+{API_COMMENT}client.sendAsync(request)
+    {API_COMMENT}.done { response in 
+        {API_COMMENT}Inspect.printDump(response)
+        {INSPECT_VARS}
+    {API_COMMENT}}
 ",
             };
             InspectVarsResponse = @"Inspect.vars([""response"":response])";
@@ -556,27 +556,33 @@ module Program =
                 ? prop.GenericArgs[0]
                 : prop.Type;
             var isArray = useType.EndsWith("[]");
-            if (isArray)
-                useType = useType.LeftPart("[");
+            var elementType = isArray
+                ? useType.LeftPart("[")
+                : null;
             var enumType = prop.IsEnum == true
                 ? types.FindType(prop.Type, prop.TypeNamespace)
                 : null;
             var collectionType = prop.TypeNamespace == "System.Collections.Generic"
-                ? $"{prop.Name.TrimPrefixes("I")}<{string.Join(',', prop.GenericArgs)}>"
+                ? $"{prop.Type.TrimPrefixes("I").LeftPart('`')}<{string.Join(',', prop.GenericArgs)}>"
                 : null;
-
+            if (collectionType != null)
+            {
+                elementType = prop.GenericArgs.Length == 1 
+                    ? prop.GenericArgs[0]
+                    : prop.GenericArgs.Length == 2
+                        ? $"KeyValuePair<{string.Join(',',prop.GenericArgs)}>"
+                        : null;
+                if (collectionType.IndexOf("Dictionary", StringComparison.Ordinal) >= 0)
+                    return null; //not supported
+            }
             if (isArray || collectionType != null)
             {
-                if (collectionType?.IndexOf("Dictionary") >= 0)
-                    return null; //not supported
                 var items = value.FromJsv<List<string>>();
                 var sb = StringBuilderCacheAlt.Allocate();
                 foreach (var item in items)
                 {
                     var itemProp = new MetadataPropertyType {
-                        Type = isArray
-                            ? useType
-                            : prop.GenericArgs[0],
+                        Type = elementType,
                         TypeNamespace = "System",
                     };
                     var literalValue = GetLiteralValue(item, itemProp, types);
@@ -584,7 +590,6 @@ module Program =
                         sb.Append($"{ItemsSep} ");
                     sb.Append(literalValue);
                 }
-
                 var collectionBody = StringBuilderCacheAlt.ReturnAndFree(sb);
                 return GetLiteralCollection(isArray, collectionBody, collectionType ?? useType);
             }

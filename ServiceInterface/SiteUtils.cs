@@ -136,6 +136,14 @@ namespace Apps.ServiceInterface
 
             return appMetadata;
         }
+
+        public static T AssertNotNull<T>(this T value, string paramName) => value != null
+            ? value
+            : throw new ArgumentNullException(paramName);
+
+        public static string AssertNotEmpty(this string value, string paramName) => !string.IsNullOrEmpty(value)
+            ? value
+            : throw new ArgumentNullException(paramName);
     }
     
 }

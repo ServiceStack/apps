@@ -122,9 +122,15 @@ namespace Apps.ServiceInterface
             "fsharp",
         };
 
-        private ConcurrentDictionary<string, SiteInfo> Map = new(StringComparer.OrdinalIgnoreCase);
+        internal ConcurrentDictionary<string, SiteInfo> Map = new(StringComparer.OrdinalIgnoreCase);
 
         public SiteInfo FindSite(string slug) => Map.Values.FirstOrDefault(x => x.Slug == slug);
+
+        public void RemoveSite(string slug)
+        {
+            var useBaseUrl = SiteUtils.UrlFromSlug(slug);
+            Map.TryRemove(useBaseUrl, out _);
+        }
 
         public async Task<SiteInfo> GetSiteAsync(string slug)
         {

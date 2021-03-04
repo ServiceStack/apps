@@ -16,7 +16,7 @@ namespace Apps.ServiceInterface
         public string Slug { get; set; }
         public string Lang { get; set; }
         public string IncludeTypes { get; set; }
-        public bool NoCache { get; set; }
+        public bool? NoCache { get; set; }
     }
 
     [Route("/gists/files/{Slug}/{Lang}/{File}")]
@@ -93,7 +93,7 @@ namespace Apps.ServiceInterface
             }
 
             var key = $"{nameof(GistRef)}:{baseUrl}:{lang.Code}:{request.IncludeTypes??"*"}.gist";
-            if (request.NoCache)
+            if (request.NoCache == true)
                 await CacheAsync.RemoveAsync(key);
             var gist = await CacheAsync.GetOrCreateAsync(key, TimeSpan.FromMinutes(10), async () => {
                 var site = await Sites.GetSiteAsync(request.Slug);
@@ -108,8 +108,8 @@ namespace Apps.ServiceInterface
                 
                 var files = new Dictionary<string, GistFile>();
                 var description = $"{baseUrlTitle} {lang.Name} API";
-                var requestOp = site.Metadata.Api.Operations.FirstOrDefault(x => x.Request.Name == requestDto); 
-                lang.Files.Each((k, v) => {
+                var requestOp = site.Metadata.Api.Operations.FirstOrDefault(x => x.Request.Name == requestDto);
+                lang.Files.Each((string k, string v) => {
                     var content = v
                         .Replace("{BASE_URL}", baseUrl)
                         .Replace("{REQUEST}", requestDto ?? "MyRequest")

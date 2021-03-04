@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -10,28 +9,6 @@ using ServiceStack.Web;
 
 namespace Apps.ServiceInterface
 {
-    [Route("/sites")]
-    [Route("/sites/{Slug}/languages")]
-    public class GetSiteInfoLanguages : IReturn<GetSiteInfoLanguagesResponse>
-    {
-        public string BaseUrl { get; set; }
-        public string Slug { get; set; }
-    }
-    public class GetSiteInfoLanguagesResponse
-    {
-        public string BaseUrl { get; set; }
-        public string Slug { get; set; }
-        public Dictionary<string,string> Languages { get; set; }
-        public ResponseStatus ResponseStatus { get; set; }
-    }
-
-    [Route("/sites/{Slug}/languages/{Lang}")]
-    public class GetSiteInfoLanguage : IReturn<GetSiteInfoLanguagesResponse>
-    {
-        public string Slug { get; set; }
-        public string Lang { get; set; }
-    }
-
     public class AppServices : Service
     {
         public Sites Sites { get; set; }
