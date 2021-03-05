@@ -1,0 +1,55 @@
+using System.Collections.Generic;
+using ServiceStack;
+using ServiceStack.NativeTypes.Swift;
+
+namespace Apps.ServiceInterface.Langs
+{
+    public class SwiftLangInfo : LangInfo
+    {
+        public SwiftLangInfo()
+        {
+            Code = "swift";
+            Name = "Swift";
+            Ext = "swift";
+            DtosPathPrefix = "Sources\\MyApp\\";
+            Files = new Dictionary<string, string> {
+                ["Package.swift"] = @"import PackageDescription
+
+let package = Package(
+    name: ""MyApp"",
+    dependencies: [
+        .package(name: ""ServiceStack"", url: ""https://github.com/ServiceStack/ServiceStack.Swift.git"", 
+            Version(5,0,0)..<Version(6,0,0))
+        ],
+    targets: [
+        .target(
+            name: ""MyApp"",
+            dependencies: [""ServiceStack""]),
+    ]
+)
+",
+                ["Sources\\MyApp\\main.swift"] = @"import Foundation
+import ServiceStack
+
+let client = JsonServiceClient(baseUrl: ""{BASE_URL}"")
+
+{API_COMMENT}let request = {REQUEST}(){REQUEST_BODY}
+{API_COMMENT}client.sendAsync(request)
+    {API_COMMENT}.done { response in 
+        {API_COMMENT}Inspect.printDump(response)
+        {INSPECT_VARS}
+    {API_COMMENT}}
+",
+            };
+            InspectVarsResponse = @"Inspect.vars([""response"":response])";
+        }
+        private SwiftGenerator Gen => new(new MetadataTypesConfig());
+        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+
+        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+            $"request.{prop.Name.ToCamelCase()} = {propValue}";
+
+        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
+            "[" + collectionBody + "]";
+    }
+}

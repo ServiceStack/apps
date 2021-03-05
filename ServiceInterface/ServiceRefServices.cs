@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ServiceStack;
 using ServiceStack.IO;
 using ServiceStack.Text;
+using Apps.ServiceInterface.Langs;
 
 namespace Apps.ServiceInterface
 {
