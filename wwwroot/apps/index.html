@@ -15,13 +15,14 @@ a { color: #007bff }
 .invalid-feedback::before{content:"\2718"}
 .is-invalid::after{content:"\2718"}
 
-.hide-enabled,.loading,.show-loading,.show-error,.show-embed {display:none}
+.hide-enabled,.loading,.show-loading,.show-error,.show-embed,.show-auth {display:none}
 .has-error .hide-error{display:none !important}
 
 .nourl .hide-enabled{display:block}
 .show-enabled{display:block}
 .nourl .show-enabled{display:none}
 .has-error .show-error{display:block}
+.requires-auth .show-auth{display:block}
 .loading .show-loading{display:block}
 .loading .show-loading.flex{display:flex}
 .loading .hide-loading{display:none}
@@ -35,26 +36,7 @@ a { color: #007bff }
     --tw-shadow: inset 0 1px 2px 0 rgba(0,0,0,0.16);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow);
 }
 INPUT.text-3xl { line-height: 2.5rem }
-ul[role=listbox] {
-    max-height: 420px;
-    overflow-y: auto;
-    overflow-x: hidden;    
-}
-ul[role=listbox]::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-}
-ul[role=listbox]::-webkit-scrollbar-track {
-    background: #f5f5f5;
-    border-radius: 5px;
-}
-ul[role=listbox]::-webkit-scrollbar-thumb {
-    border-radius: 5px;
-    background: #ccc;
-}
-ul[role=listbox]::-webkit-scrollbar-thumb:hover {
-    background: #999;
-}
+
 @media (min-width: 414px) {
     .just-add { display:none }
     .w-25{width:3.125rem}.h-25{height:3.125rem}
@@ -170,6 +152,12 @@ ul[role=listbox]::-webkit-scrollbar-thumb:hover {
         
         <div id="customize-embed">
             <div id="tags" class="mt-2 flex"></div>
+            <div class="show-auth absolute" style="margin:1.3em 0 0 565px;z-index: 1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
+                    <title>Requires Authentication</title>
+                    <path fill="#374151" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                </svg>
+            </div>
             <label>
                 <input id="txtRequest" type="text" spellcheck="false" placeholder="Choose API"
                        class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-wide-section-half">
@@ -451,11 +439,11 @@ window.onhashchange = function () {
     handleHash(location.hash.substring(1));
 }
 
-function findType(meta, typeName, typeNamespace) {
-    let type = meta.types.find(x => x.name === typeName && (!typeNamespace || x.typeNamespace === typeNamespace))
-        || meta.operations.map(x => x.request).find(x => x.name === typeName && (!typeNamespace || x.typeNamespace === typeNamespace))
+function findType(meta, typeName, namespace) {
+    let type = meta.types.find(x => x.name === typeName && (!namespace || x.namespace === namespace))
+        || meta.operations.map(x => x.request).find(x => x.name === typeName && (!namespace || x.namespace === namespace))
         || meta.operations.map(x => x.response).filter(x => x != null)
-            .find(x => x.name === typeName && (!typeNamespace || x.typeNamespace === typeNamespace));
+            .find(x => x.name === typeName && (!namespace || x.namespace === namespace));
     return type;
 }
 function trimPrefixes(str,c) {
@@ -464,7 +452,7 @@ function trimPrefixes(str,c) {
 let NumericTypes = ['Byte','SByte','Int16','Int32','Int64','UInt16','UInt32','UInt64','Single','Double','Decimal'];
 function isNumeric(type) { return NumericTypes.indexOf(type) >= 0; }
 
-function typeInfo(prop,meta) {
+function typeInfo(meta,prop) {
     let type = prop.type === "Nullable`1"
         ? prop.genericArgs[0]
         : prop.type;
@@ -496,13 +484,32 @@ function typeInfo(prop,meta) {
         isDictionary: collectionType && collectionType.indexOf('Dictionary') >= 0,
         isString: type === 'String',
         isNumeric: isNumeric(type),
-        isDateTime: type === 'DateTime',
+        isDateTime: type === 'DateTime' || type === 'DateTimeOffset',
         isTimeSpan: type === 'TimeSpan',
         isBoolean: type === 'Boolean',
         isClass: enumType == null && metaType !== null,
     };
     if (LOG) console.log(`typeInfo(${prop.type})`, info);
     return info;
+}
+
+function typeProperties(meta,type) {
+    let to = [];
+    if (type == null)
+        return to;
+    
+    do {
+        if (type.properties) {
+            type.properties.forEach(x => {
+                to.push(x);
+            });
+        }
+        type = type.inherits
+            ? findType(meta, type.inherits.name, type.inherits.namespace)
+            : null;
+    } while (type != null);
+    
+    return to;
 }
 
 function createInput(prop,info,meta) {
@@ -518,7 +525,40 @@ function createInput(prop,info,meta) {
         attrs.pattern = "[0-9.,]*";
         attrs.onblur = "this.reportValidity()"
     }
+    else if (info.isNumeric) {
+        attrs.type = 'number';
+    }
+    else if (info.isDateTime) {
+        return 'datetime-local';
+    }
     return `<input ${htmlAttrs(attrs)}>`;
+}
+function createControl(prop,info,meta) {
+    if (info.isBoolean) {
+        return `<fieldset class="col-span-6">
+        <div class="mt-4 space-y-4">
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input id="${prop.name}" name="${prop.name}" type="checkbox" value="true" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="${prop.name}" class="font-medium text-gray-700">${humanize(prop.name)}</label>
+            </div>
+          </div>
+        </div>
+        </fieldset>`;
+    }
+    
+    let cls = info.isNumeric
+        ? 'col-span-3'
+        : 'col-span-6';
+    return `<div class="${cls}">
+        <label for="${prop.name}" class="block text-sm font-medium text-gray-700">${humanize(prop.name)}</label>
+        ${createInput(prop,info,meta)}
+    </div>`;
+}
+function isAutoQuery(request) {
+    return request.inherits && request.inherits.name.startsWith('Query');
 }
 
 function createForm(request, meta) {
@@ -528,12 +568,12 @@ function createForm(request, meta) {
               <div class="px-4 py-5 bg-white sm:p-6">
                 <div class="grid grid-cols-6 gap-3">`];
     
-    (request.properties || []).forEach(prop => {
-        let info = typeInfo(prop,meta);
-        sb.push(`<div class="col-span-6 col-span-3">
-            <label for="${prop.name}" class="block text-sm font-medium text-gray-700">${humanize(prop.name)}</label>
-            ${createInput(prop,info,meta)}
-        </div>`)
+    let props = typeProperties(meta,request);
+    props.forEach(prop => {
+        let info = typeInfo(meta,prop);
+        if (info.isDictionary) return;
+        if (isAutoQuery(request) && prop.name === 'Include') return;
+        sb.push(createControl(prop,info,meta));
     });
     sb.push(`</div>
       </div>`);
@@ -549,6 +589,7 @@ function createForm(request, meta) {
 }
 
 function applyForm(form) {
+    if (!form) return;
     let opName = $('#txtRequest').value;
     let obj = serializeToObject(form);
     if (LOG) console.log('applyForm', opName, obj);
@@ -558,10 +599,11 @@ function applyForm(form) {
         let op = meta.operations.find(x => x.request.name === opName);
         let request = op.request;
         let args = [];
-        (request.properties || []).forEach(prop => {
+        let props = typeProperties(meta,request);
+        props.forEach(prop => {
             let value = obj[prop.name];
             if (!value) return;
-            let info = typeInfo(prop, meta);
+            let info = typeInfo(meta,prop);
             if (args.length > 0)
                 args.push(',');
             args.push(prop.name);
@@ -586,11 +628,17 @@ function selectOp(opName) {
     getSiteMeta(slug(), meta => {
         let op = meta.operations.find(x => x.request.name === opName);
         if (!op) return;
+        if (op.requiresAuth)
+            document.body.classList.add('requires-auth');
+        else
+            document.body.classList.remove('requires-auth');
         let sb = [];
         let $apiForm = $('#apiForm');
         $apiForm.innerHTML = createForm(op.request, meta);
         let $input = $$('input,select,textarea',$apiForm)[0];
         if ($input) $input.focus();
+
+        applyForm($('#apiForm form'));
     });
 }
 

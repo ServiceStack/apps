@@ -110,12 +110,16 @@ namespace Apps.ServiceInterface
                 var files = new Dictionary<string, GistFile>();
                 var description = $"{baseUrlTitle} {lang.Name} API";
                 var requestOp = site.Metadata.Api.Operations.FirstOrDefault(x => x.Request.Name == requestDto);
+                var authTemplate = requestOp?.RequiresAuth == true
+                    ? lang.RequiresAuthTemplate
+                    : "";
                 lang.Files.Each((string k, string v) => {
                     var content = v
                         .Replace("{BASE_URL}", baseUrl)
                         .Replace("{REQUEST}", requestDto ?? "MyRequest")
                         .Replace("{RESPONSE}", lang.GetResponse(requestOp))
                         .Replace("{API_COMMENT}", request.IncludeTypes != null ? "" : lang.LineComment)
+                        .Replace("{REQUIRES_AUTH}", authTemplate)
                         .Replace("{DESCRIPTION}",description)
                         .Replace("{INSPECT_VARS}", requestDto != null ? lang.InspectVarsResponse : null);
                     content = args != null

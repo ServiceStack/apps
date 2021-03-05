@@ -32,7 +32,7 @@ using ServiceStack;
 using ServiceStack.Text;
 using MyApp;
 
-var client = new JsonServiceClient(""{BASE_URL}"");
+var client = new JsonServiceClient(""{BASE_URL}"");{REQUIRES_AUTH}
 
 {API_COMMENT}var response = client.Send(new {REQUEST} {{REQUEST_BODY}
 {API_COMMENT}});
@@ -40,6 +40,13 @@ var client = new JsonServiceClient(""{BASE_URL}"");
 {INSPECT_VARS}"
             };
             InspectVarsResponse = "\nInspect.vars(new { response });";
+            RequiresAuthTemplate = @"
+// Authentication is required
+// client.Post(new Authenticate {
+//     provider = ""credentials"",
+//     UserName = ""..."",
+//     Password = ""...""
+// });";
         }
 
         private CSharpGenerator Gen => new(new MetadataTypesConfig());

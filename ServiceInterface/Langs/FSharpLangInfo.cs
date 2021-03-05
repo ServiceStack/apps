@@ -48,7 +48,7 @@ module Program =
 
         let client = new JsonServiceClient(""{BASE_URL}"")
 
-        let response = client.Send(new {REQUEST}({REQUEST_BODY}))
+        let response = client.Send(new {REQUEST}({REQUEST_BODY})){REQUIRES_AUTH}
 
         {API_COMMENT}response.PrintDump()
         {INSPECT_VARS}
@@ -57,6 +57,12 @@ module Program =
 "
             };
             InspectVarsResponse = "Inspect.vars({| response = response |})";
+            RequiresAuthTemplate = @"
+        // Authentication is required
+        // client.Post(new Authenticate(
+        //     provider = ""credentials"",
+        //     UserName = ""..."",
+        //     Password = ""...""))";
         }
         private FSharpGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
@@ -68,7 +74,7 @@ module Program =
             isArray
                 ? $"[| " + collectionBody + " |]"
                 : collectionType.StartsWith("ResizeArray")
-                    ? "ResizeArray([ " + ConvertCollectionBody(collectionBody,collectionType) + "])"
+                    ? $"ResizeArray([{ConvertCollectionBody(collectionBody,collectionType)}])"
                     : $"new {collectionType}([{ConvertCollectionBody(collectionBody,collectionType)}])";
 
         private static string ConvertCollectionBody(string collectionBody, string collectionType)

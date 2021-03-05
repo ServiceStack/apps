@@ -392,4 +392,8 @@ border-color: #e5e7eb}
 .sm\:p-6 {padding: 1.5rem}
 .sm\:px-6 { padding-left: 1.5rem;padding-right: 1.5rem}
 .sm\:col-span-3 {grid-column: span 3 / span 3}
+.sm\:col-span-6 {grid-column: span 6 / span 6}
+}
+@media (min-width: 1024px) {
+.lg\:col-span-2 {grid-column: span 2 / span 2}
 }

@@ -21,7 +21,8 @@ import '../lib/dtos.dart';
 
 void main(List<String> arguments) async {
 
-  var client = new JsonServiceClient('{BASE_URL}');
+  var client = new JsonServiceClient('{BASE_URL}');{REQUIRES_AUTH}
+
   {API_COMMENT}var response = await client.send({REQUEST}(){REQUEST_BODY});
 
   {API_COMMENT}Inspect.printDump(response);
@@ -43,6 +44,12 @@ dev_dependencies:
 #  pedantic: ^1.9.0",
             };
             InspectVarsResponse = "Inspect.vars({'response': response});";
+            RequiresAuthTemplate = @"
+  // Authentication is required
+  // client.post(new Authenticate()
+  //   ..provider = 'credentials'
+  //   ..userName = '...'
+  //   ..password = '...');";
         }
         
         private DartGenerator Gen => new(new MetadataTypesConfig());

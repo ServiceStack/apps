@@ -31,7 +31,7 @@ let package = Package(
                 ["Sources\\MyApp\\main.swift"] = @"import Foundation
 import ServiceStack
 
-let client = JsonServiceClient(baseUrl: ""{BASE_URL}"")
+let client = JsonServiceClient(baseUrl: ""{BASE_URL}""){REQUIRES_AUTH}
 
 {API_COMMENT}let request = {REQUEST}(){REQUEST_BODY}
 {API_COMMENT}client.sendAsync(request)
@@ -42,6 +42,13 @@ let client = JsonServiceClient(baseUrl: ""{BASE_URL}"")
 ",
             };
             InspectVarsResponse = @"Inspect.vars([""response"":response])";
+            RequiresAuthTemplate = @"
+// Authentication is required
+// let auth = Authenticate()
+// auth.provider = ""credentials""
+// auth.userName = ""...""
+// auth.password = ""...""
+// client.post(auth)";
         }
         private SwiftGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);

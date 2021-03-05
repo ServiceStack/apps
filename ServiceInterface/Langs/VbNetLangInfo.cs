@@ -50,6 +50,12 @@ End Module
 "
             };
             InspectVarsResponse = "Inspect.vars(New With { response })";
+            RequiresAuthTemplate = @"
+        ' Authentication is required
+        ' client.Post(New Authenticate() With {
+        '     .provider = ""credentials"",
+        '     .UserName = ""..."",
+        '     .Password = ""..."" })";
         }
         private VbNetGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);

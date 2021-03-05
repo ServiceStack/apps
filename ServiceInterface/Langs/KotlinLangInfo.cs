@@ -18,7 +18,7 @@ import net.servicestack.client.JsonServiceClient
 import net.servicestack.gistcafe.Inspect
 
 fun main(args: Array<String>) {
-    val client = JsonServiceClient(""{BASE_URL}"")
+    val client = JsonServiceClient(""{BASE_URL}""){REQUIRES_AUTH}
 
     {API_COMMENT}val response = client.send({REQUEST}().apply {{REQUEST_BODY}
     {API_COMMENT}});
@@ -65,6 +65,12 @@ dependencies {
 ",
             };
             InspectVarsResponse = "Inspect.vars(mapOf(\"response\" to response))";
+            RequiresAuthTemplate = @"
+    // Authentication is required
+    // client.post(new Authenticate().apply {
+    //     provider = ""credentials""
+    //     userName = ""...""
+    //     password = ""..."" })";
         }
         private KotlinGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);

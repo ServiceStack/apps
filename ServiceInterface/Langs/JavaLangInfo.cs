@@ -29,7 +29,7 @@ public class App {
     public static void main(String[] args) {
 
         JsonServiceClient client = new JsonServiceClient(
-            ""{BASE_URL}"");
+            ""{BASE_URL}"");{REQUIRES_AUTH}
 
         {API_COMMENT}{RESPONSE} response = client.send(({REQUEST}) new {REQUEST}(){REQUEST_BODY});
 
@@ -72,6 +72,12 @@ application {
 ",
             };
             InspectVarsResponse = "Inspect.vars(Collections.singletonMap(\"response\", response));";
+            RequiresAuthTemplate = @"
+        // Authentication is required
+        // client.post(new Authenticate()
+        //     .setProvider(""credentials"")
+        //     .setUserName(""..."")
+        //     .setPassword(""...""));";
         }
         private JavaGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);

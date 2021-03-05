@@ -14,6 +14,7 @@ namespace Apps.ServiceInterface.Langs
         public string DtosPathPrefix { get; set; } = "";
         public string LineComment { get; set; } = "//";
         public string InspectVarsResponse { get; set; }
+        public string RequiresAuthTemplate { get; set; }
         public char ItemsSep { get; set; } = ',';
         public Dictionary<string, string> Files { get; set; } = new();
 
