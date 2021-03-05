@@ -37,7 +37,7 @@ Module Program
 
     Sub Main(args As String())
 
-        Dim client = New JsonServiceClient(""{BASE_URL}"")
+        Dim client = New JsonServiceClient(""{BASE_URL}""){REQUIRES_AUTH}
 
         {API_COMMENT}Dim response = client.Send(New {REQUEST}(){REQUEST_BODY})
             

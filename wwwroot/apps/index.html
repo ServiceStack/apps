@@ -415,7 +415,8 @@ on('#formUrl', { submit: e => { e.preventDefault(); onUrlChange(); } });
 on('#scheme,#baseUrl', { change: onUrlChange });
 on('#btn-clear div', {
     click: function (e) {
-        $('#baseUrl').value = '';
+        $('#baseUrl').value = $('#txtRequest').value = $('#apiForm').innerHTML = '';
+        document.body.classList.remove('requires-auth');
         clearLangs();
         onUrlChange();
     }

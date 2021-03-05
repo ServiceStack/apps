@@ -42,10 +42,10 @@ namespace Apps.ServiceInterface.Langs
 import { Inspect } from 'gistcafe';
 {API_COMMENT}import { {REQUEST} } from './dtos';
 
-let client = new JsonServiceClient('{BASE_URL}');{REQUIRES_AUTH}
+let client = new JsonServiceClient('{BASE_URL}');
 
 (async () => {
-
+{REQUIRES_AUTH}
 {API_COMMENT}let response = await client.get(new {REQUEST}({{REQUEST_BODY}
 {API_COMMENT}}));
 
@@ -57,11 +57,11 @@ let client = new JsonServiceClient('{BASE_URL}');{REQUIRES_AUTH}
             };
             InspectVarsResponse = "Inspect.vars({ response });";
             RequiresAuthTemplate = @"
-    // Authentication is required
-    // client.post(new Authenticate({ 
-    //     provider: 'credentials',
-    //     userName: '...',
-    //     password: '...'}));";
+// Authentication is required
+// client.post(new Authenticate({ 
+//     provider: 'credentials',
+//     userName: '...',
+//     password: '...'}));";
         }
         private TypeScriptGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
