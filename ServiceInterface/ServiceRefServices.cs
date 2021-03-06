@@ -78,7 +78,7 @@ namespace Apps.ServiceInterface
             if (includeTypes != null && includeTypes.IndexOf('(') >= 0)
             {
                 var kvps = includeTypes.RightPart('(');
-                kvps = '{' +kvps.Substring(0, kvps.Length - 1).Replace('=',':') + '}';
+                kvps = '{' + kvps.Substring(0, kvps.Length - 1) + '}';
                 args = kvps.FromJsv<Dictionary<string, string>>();
                 includeTypes = includeTypes.LeftPart('(');
                 requestDto = includeTypes.LastRightPart(',');

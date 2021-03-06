@@ -490,3 +490,25 @@ export declare function classNames(...args: any[]): string;
 export declare function fromXsdDuration(xsd: string): number;
 export declare function toXsdDuration(time: number): string;
 export declare function toTimeSpanFmt(time: number): string;
+export declare function flatMap(f: Function, xs: any[]): any;
+export declare function uniq(xs: string[]): string[];
+export declare function enc(o: any): string;
+export declare function htmlAttrs(o: any): string;
+export declare function indexOfAny(str: string, needles: string[]): number;
+export declare function isNullOrEmpty(o: any): boolean;
+export declare class StringBuffer {
+    buffer_: string;
+    constructor(opt_a1?: any, ...var_args: any[]);
+    set(s: string): void;
+    append(a1: any, opt_a2?: any, ...var_args: any[]): this;
+    clear(): void;
+    getLength(): number;
+    toString(): string;
+}
+export declare class JSV {
+    static ESCAPE_CHARS: string[];
+    static encodeString(str: string): string;
+    static encodeArray(array: any[]): string;
+    static encodeObject(obj: any): string;
+    static stringify(obj: any): any;
+}

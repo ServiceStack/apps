@@ -36,6 +36,10 @@ a { color: #007bff }
     --tw-shadow: inset 0 1px 2px 0 rgba(0,0,0,0.16);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow);
 }
 INPUT.text-3xl { line-height: 2.5rem }
+#apiForm .awesomplete { display: block }
+#apiForm .awesomplete ul { overflow-y: auto; max-height: 19.5rem; }
+#apiForm .awesomplete ul::-webkit-scrollbar { width:5px; height:8px; }
+#apiForm .awesomplete ul::-webkit-scrollbar-thumb { background-color: #e0e0e0; }
 
 @media (min-width: 414px) {
     .just-add { display:none }
@@ -57,7 +61,7 @@ INPUT.text-3xl { line-height: 2.5rem }
 </style>
 
 <script>let exports = { __esModule:true }, module = { exports:exports }; function require(name) { return exports[name] || window[name] }</script>
-<script defer src="https://unpkg.com/@servicestack/client@1.0.43/dist/servicestack-client.min.js"></script>
+<script defer src="https://unpkg.com/@servicestack/client@1.0.45/dist/servicestack-client.min.js"></script>
 <script defer src="dtos.js"></script>
 </head>
 <body class="m-0 font-sans bg-gray-50 nourl">
@@ -167,16 +171,30 @@ INPUT.text-3xl { line-height: 2.5rem }
     </div>
 </div>
 
-<datalist id="operations"></datalist>
+<div class="foot show-enabled border-t-1 py-2 text-center text-gray-500" style="margin-top:12rem">
+    <div>
+        <a href="https://servicestack.net" title="servicestack.net" class="opacity-25 hover:opacity-100">
+            <svg class="w-6 h-6 inline-block" viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'> <style> .path{} </style><g id='servicestack-svg'><path class='path' stroke='null' d='m16.564516,43.33871c16.307057,2.035887 54.629638,20.41875 60.67742,46.306452l-78.241936,0c19.859879,-1.616734 36.825605,-27.344758 17.564516,-46.306452zm6.387097,-30.33871c6.446976,7.105645 9.520766,16.74617 9.26129,26.666129c16.546573,6.726411 41.376412,24.690121 46.625807,49.979033l19.161291,0c-8.123589,-43.132863 -54.529839,-73.551412 -75.048388,-76.645162z' /></g></svg>
+        </a>
+        &copy; 2021 ServiceStack, Inc.
+    </div>
+</div>
 
 <script>
 let LOG = location.search.indexOf('log=1') >= 0 || true;
 /** @type {JsonServiceClient} */
 let client = null;
 
-let $ = (sel, el) => typeof sel === "string" ? (el || document).querySelector(sel) : sel || null,
-    $$ = (sel, el) => Array.prototype.slice.call((el || document).querySelectorAll(sel));
-
+function $(sel, el) {
+    return typeof sel === "string" ? (el || document).querySelector(sel) : sel || null;
+}
+function $$(sel, el) {
+    return typeof sel === "string" 
+        ? Array.prototype.slice.call((el || document).querySelectorAll(sel)) 
+        : Array.isArray(sel) 
+            ? sel 
+            : [sel];
+}
 function on(sel, handlers) {
     $$(sel).forEach(e => {
         Object.keys(handlers).forEach(function (evt) {
@@ -222,8 +240,7 @@ function urlFromSlug(slug) {
         url = rightPart(url,':');
 
     let firstPos = url.indexOf(':');
-    if (!isUrl && firstPos >= 0)
-    {
+    if (!isUrl && firstPos >= 0) {
         let atPort = rightPart(url,':');
         let delim1Pos = atPort.indexOf(':');
         let delim2Pos = atPort.indexOf('/');
@@ -234,8 +251,8 @@ function urlFromSlug(slug) {
             ? atPort.substring(0,endPos)
             : atPort.substring(0,atPort.length - 1);
         url = isInteger(testPort)
-            ? leftPart(url,':') + ':' + atPort.replace(/:/g, '/')
-            : leftPart(url,':') + '/' + atPort.replace(/:/g, '/');
+            ? leftPart(url,':') + ':' + unSlash(atPort)
+            : leftPart(url,':') + '/' + unSlash(atPort);
     }
     url = decodeURIComponent(url);
     if (!isUrl) {
@@ -244,6 +261,15 @@ function urlFromSlug(slug) {
             : "https://" + url;
     }
     return url;
+}
+function unSlash(urlComponent) {
+    // don't replace ':' after '('...)
+    if (urlComponent.indexOf('(') >= 0) {
+        let target = leftPart(urlComponent,'(');
+        let suffix = rightPart(urlComponent,'(');
+        return target.replace(/:/g, '/') + '(' + suffix;
+    }
+    return urlComponent.replace(/:/g, '/');
 }
 
 function handleHash(path) {
@@ -352,10 +378,10 @@ function selectLang(e) {
         }
         opsAwesomplete = new Awesomplete('#txtRequest', { list:ops, sort:sortFn });
         let tagNames = uniq(flatMap(x => x.tags, meta.operations.filter(x => x.tags)));
-        let sb = [];
+        let sb = new StringBuffer();
         tagNames.forEach(tag => 
-            sb.push(`<div class="tag text-xs inline-flex items-center font-bold leading-4 uppercase px-3 py-1 mr-1 bg-blue-100 text-blue-500 rounded-full cursor-pointer" data-tag="${tag}" data-click="selectTag">${tag}</div>`));
-        $("#tags").innerHTML = sb.join('');
+            sb.append(`<div class="tag text-xs inline-flex items-center font-bold leading-4 uppercase px-3 py-1 mr-1 bg-blue-100 text-blue-500 rounded-full cursor-pointer" data-tag="${tag}" data-click="selectTag">${tag}</div>`));
+        $("#tags").innerHTML = sb.toString();
     });
 }
 
@@ -512,7 +538,9 @@ function typeProperties(meta,type) {
     
     return to;
 }
-
+let PosIntFields = ['Skip','Take'];
+let MultiPropFields = ['OrderBy','OrderByDesc','Fields'];
+let NarrowFields = ['Skip','Take','OrderBy','OrderByDesc'];
 function createInput(prop,info,meta) {
     let attrs = {
         id:prop.name,
@@ -528,13 +556,18 @@ function createInput(prop,info,meta) {
     }
     else if (info.isNumeric) {
         attrs.type = 'number';
+        let posIntOnly = PosIntFields.indexOf(prop.name) >= 0 || info.type.startsWith('U');
+        if (posIntOnly) {
+            attrs.min = "0";
+            attrs.oninput = "validity.valid||(value='')";
+        }
     }
     else if (info.isDateTime) {
         return 'datetime-local';
     }
     return `<input ${htmlAttrs(attrs)}>`;
 }
-function createControl(prop,info,meta) {
+function createControl(prop,info,meta,opt) {
     if (info.isBoolean) {
         return `<fieldset class="col-span-6">
         <div class="mt-4 space-y-4">
@@ -549,11 +582,7 @@ function createControl(prop,info,meta) {
         </div>
         </fieldset>`;
     }
-    
-    let cls = info.isNumeric
-        ? 'col-span-3'
-        : 'col-span-6';
-    return `<div class="${cls}">
+    return `<div class="${opt.colClass}">
         <label for="${prop.name}" class="block text-sm font-medium text-gray-700">${humanize(prop.name)}</label>
         ${createInput(prop,info,meta)}
     </div>`;
@@ -563,30 +592,43 @@ function isAutoQuery(request) {
 }
 
 function createForm(request, meta) {
-    let sb = [
+    let aqRequest = isAutoQuery(request);
+    let formCls = aqRequest ? '' : 'overflow-hidden sm:rounded-md'; //don't clip popups
+
+    let sb = new StringBuffer(
         `<form onsubmit="return applyForm(this)">
-            <div class="shadow overflow-hidden sm:rounded-md mb-8">
+            <div class="shadow ${formCls}">
               <div class="px-4 py-5 bg-white sm:p-6">
-                <div class="grid grid-cols-6 gap-3">`];
+                <div class="grid grid-cols-6 gap-3">`);
     
     let props = typeProperties(meta,request);
     props.forEach(prop => {
         let info = typeInfo(meta,prop);
         if (info.isDictionary) return;
-        if (isAutoQuery(request) && prop.name === 'Include') return;
-        sb.push(createControl(prop,info,meta));
+        let opt = {
+            colClass: info.isNumeric ? 'col-span-3' : 'col-span-6'
+        };
+        if (aqRequest) {
+            if (prop.name === 'Include')
+                return;
+            if (prop.name === 'Skip')
+                sb.append('<hr class="col-span-6 mt-2">');             
+            if (NarrowFields.indexOf(prop.name) >= 0)
+                opt.colClass = 'col-span-3';
+        }
+        sb.append(createControl(prop,info,meta,opt));
     });
-    sb.push(`</div>
+    sb.append(`</div>
       </div>`);
     
-    sb.push(`<div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+    sb.append(`<div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
                 <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                   Apply
                 </button>
             </div>
         </div>
     </form>`)
-    return sb.join('');
+    return sb.toString();
 }
 
 function applyForm(form) {
@@ -599,26 +641,35 @@ function applyForm(form) {
     getSiteMeta(slug(), meta => {
         let op = meta.operations.find(x => x.request.name === opName);
         let request = op.request;
-        let args = [];
+        let args = new StringBuffer();
         let props = typeProperties(meta,request);
         props.forEach(prop => {
             let value = obj[prop.name];
             if (!value) return;
+            value = trimEnd(value.trim(),',');
             let info = typeInfo(meta,prop);
-            if (args.length > 0)
-                args.push(',');
-            args.push(prop.name);
-            args.push('=');
+            if (args.getLength() > 0)
+                args.append(',');
+            args.append(prop.name);
+            args.append(':');
             if (info.elementType)
-                args.push(`[${value}]`);
+                args.append(`[${value}]`);
             else
-                args.push(value);
+                args.append(JSV.stringify(value));
         });
-        let iframeSrc = gistUrl(url + '(' + args.join('') + ')');
+        let iframeSrc = gistUrl(url + '(' + args.toString() + ')');
         if (LOG) console.log('iframeSrc',iframeSrc);
         $('#iframe').src = iframeSrc;  
     });
     return false;
+}
+
+let awesompleteInstances = [];
+function clearAwesompleteInstances() {
+    if (awesompleteInstances.length > 0) {
+        awesompleteInstances.forEach(x => x.destroy());
+        awesompleteInstances = [];
+    }
 }
 
 function selectOp(opName) {
@@ -633,9 +684,53 @@ function selectOp(opName) {
             document.body.classList.add('requires-auth');
         else
             document.body.classList.remove('requires-auth');
-        let sb = [];
+
+        clearAwesompleteInstances();
+
         let $apiForm = $('#apiForm');
         $apiForm.innerHTML = createForm(op.request, meta);
+
+        if (isAutoQuery(op.request)) {
+            let targetName = op.request.inherits.genericArgs[0];
+            let target = findType(meta, targetName);
+            if (target) {
+                let targetPropNames = typeProperties(meta, target).map(x => x.name);
+                let props = typeProperties(meta,op.request).filter(prop => MultiPropFields.indexOf(prop.name) >= 0);
+                let cache = {};
+                props.forEach(prop => {
+                    let id = prop.name;
+                    let $input = $(`#${id}`);
+                    let instance = new Awesomplete($input, {
+                        list: targetPropNames,
+                        filter: function(text, input) {
+                            //console.log('filter', text, input, 1, input.indexOf(text.value + ','))
+                            if (input.indexOf(text.value + ',') >= 0)
+                                return false;
+                            return Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
+                        },
+                        item: function(text, input) {
+                            return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
+                        },
+                        replace: function(text) {
+                            let before = this.input.value.match(/^.+,\s*|/)[0];
+                            this.input.value = before + text + ", ";
+                        }
+                    });
+                    on($input, {
+                        mousedown: function () {
+                            let instance = awesompleteInstances.find(x => x.input === this);
+                            if (instance) {
+                                instance.evaluate();
+                                instance.open();
+                            }
+                        }
+                    })
+                    awesompleteInstances.push(instance);
+                    if (LOG) console.log('awesompleteInstances', awesompleteInstances)
+                });
+            } else if (LOG) console.error(`Could not find table: ${targetName}`);
+        }
+
         let $input = $$('input,select,textarea',$apiForm)[0];
         if ($input) $input.focus();
 
@@ -644,8 +739,8 @@ function selectOp(opName) {
 }
 
 function init() {
-    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, htmlAttrs, serializeToObject, combinePaths } = exports;
-    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, htmlAttrs, serializeToObject, combinePaths });
+    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd } = exports;
+    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd });
     client = new JsonServiceClient();
     client.exceptionFilter = (res,err) => {
         setError(err.responseStatus || err, res.statusText || res.status);
