@@ -36,6 +36,7 @@ a { color: #007bff }
     --tw-shadow: inset 0 1px 2px 0 rgba(0,0,0,0.16);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow);
 }
 INPUT.text-3xl { line-height: 2.5rem }
+#choose-api .awesomplete { width: 100%; }
 #apiForm .awesomplete { display: block }
 #apiForm .awesomplete ul { overflow-y: auto; max-height: 19.5rem; }
 #apiForm .awesomplete ul::-webkit-scrollbar { width:5px; height:8px; }
@@ -154,19 +155,30 @@ INPUT.text-3xl { line-height: 2.5rem }
             </div>
         </div>
         
-        <div id="customize-embed">
-            <div id="tags" class="mt-2 flex"></div>
-            <div class="show-auth absolute" style="margin:1.3em 0 0 565px;z-index: 1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
-                    <title>Requires Authentication</title>
-                    <path fill="#374151" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-                </svg>
+        <div id="customize-embed" class="flex">
+            <div class="flex-1">
+                <div id="tags" class="mt-2 flex"></div>
+                <div class="show-auth absolute" style="margin:1.3em 0 0 565px;z-index: 1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
+                        <title>Requires Authentication</title>
+                        <path fill="#374151" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                    </svg>
+                </div>
+                <label id="choose-api">
+                    <input id="txtRequest" type="text" spellcheck="false" placeholder="Choose API"
+                           class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
+                </label>
+                <div id="apiForm" class="mt-2 w-full"></div>
             </div>
-            <label>
-                <input id="txtRequest" type="text" spellcheck="false" placeholder="Choose API"
-                       class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-wide-section-half">
-            </label>
-            <div id="apiForm" class="mt-2 w-wide-section-half"></div>
+            <div class="flex-shrink px-1"></div>
+            <div class="flex-1">
+                <div class="mt-2 text-gray-500 font-semibold uppercase text-right">Customize Download</div>
+                <label id="customize-download">
+                    <input id="txtProjectName" type="text" spellcheck="false" placeholder="Project Name"
+                           class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
+                </label>
+                <div id="customForm" class="mt-2 w-full"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -316,6 +328,12 @@ function updateHash() {
     }
 }
 
+function setIncludeSelected(id) {
+    localStorage.setItem('include:active',id);
+}
+function lastIncludeSelected() {
+    return localStorage.getItem('include:active') || 'includeAll';
+}
 function setLastLangSelected(value) {
     localStorage.setItem('lang:active',value);
 }
@@ -383,6 +401,7 @@ function selectLang(e) {
             sb.append(`<div class="tag text-xs inline-flex items-center font-bold leading-4 uppercase px-3 py-1 mr-1 bg-blue-100 text-blue-500 rounded-full cursor-pointer" data-tag="${tag}" data-click="selectTag">${tag}</div>`));
         $("#tags").innerHTML = sb.toString();
     });
+    updateDownload();
 }
 
 let SITES = {};
@@ -442,6 +461,7 @@ on('#scheme,#baseUrl', { change: onUrlChange });
 on('#btn-clear div', {
     click: function (e) {
         $('#baseUrl').value = $('#txtRequest').value = $('#apiForm').innerHTML = '';
+        updateDownload();
         document.body.classList.remove('requires-auth');
         clearLangs();
         onUrlChange();
@@ -563,7 +583,7 @@ function createInput(prop,info,meta) {
         }
     }
     else if (info.isDateTime) {
-        return 'datetime-local';
+        attrs.type = 'datetime-local';
     }
     return `<input ${htmlAttrs(attrs)}>`;
 }
@@ -593,7 +613,7 @@ function isAutoQuery(request) {
 
 function createForm(request, meta) {
     let aqRequest = isAutoQuery(request);
-    let formCls = aqRequest ? '' : 'overflow-hidden sm:rounded-md'; //don't clip popups
+    let formCls = aqRequest || true ? '' : 'overflow-hidden sm:rounded-md'; //don't clip popups
 
     let sb = new StringBuffer(
         `<form onsubmit="return applyForm(this)">
@@ -606,7 +626,7 @@ function createForm(request, meta) {
         let info = typeInfo(meta,prop);
         if (info.isDictionary) return;
         let opt = {
-            colClass: info.isNumeric ? 'col-span-3' : 'col-span-6'
+            colClass: info.isNumeric || info.isDateTime || info.isTimeSpan ? 'col-span-3' : 'col-span-6'
         };
         if (aqRequest) {
             if (prop.name === 'Include')
@@ -632,6 +652,7 @@ function createForm(request, meta) {
 }
 
 function applyForm(form) {
+    updateDownload();    
     if (!form) return;
     let opName = $('#txtRequest').value;
     let obj = serializeToObject(form);
@@ -664,6 +685,46 @@ function applyForm(form) {
     return false;
 }
 
+function updateDownload() {
+    let dtoOptions = [{ id:'includeAll', label: 'All', value:'*' }];
+    let $selectedTag = $('#tags .active');
+    if ($selectedTag) {
+        let tag = $selectedTag.getAttribute('data-tag');
+        dtoOptions.push({ id:'includeTag', label: `Only ${tag} DTOs`, value: '{' + tag + '}' });
+    }
+    let $txtRequest = $('#txtRequest');
+    if ($txtRequest.value) {
+        dtoOptions.push({ id:'includeRequest', label: `Only ${$txtRequest.value} DTOs`, value: '' });
+    }
+    
+    let selectedInclude = lastIncludeSelected();
+    let selectedOption = dtoOptions.find(x => x.id === selectedInclude) || dtoOptions[dtoOptions.length-1];
+    selectedOption.checked = true;
+
+    let sb = new StringBuffer();
+    dtoOptions.forEach(x => {
+        let checked = x.checked === true ? ' checked' : '';
+        sb.append(`<div class="flex items-center">
+            <input id="${x.id}" name="include" value="${x.value}" ${checked} type="radio" onchange="setIncludeSelected('${x.id}')" 
+                   class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                <label for="${x.id}" class="ml-3 block text-sm font-medium text-gray-700">${x.label}</label>
+        </div>`);
+    });
+    let includeHtml = `<fieldset>
+          <div>
+            <legend class="text-base font-medium text-gray-900">Include DTOs</legend>
+          </div>
+        <div class="mt-4 space-y-4">${sb.toString()}</div>
+    </fieldset>`;
+    
+    $('#customForm').innerHTML = `<div class="shadow overflow-hidden sm:rounded">
+      <div class="px-4 py-5 bg-white sm:p-6">
+        <div class="">
+            ${includeHtml}
+        </div>
+    </div>`;
+}
+
 let awesompleteInstances = [];
 function clearAwesompleteInstances() {
     if (awesompleteInstances.length > 0) {
@@ -675,6 +736,7 @@ function clearAwesompleteInstances() {
 function selectOp(opName) {
     if (!opName) {
         $('#apiForm').innerHTML = '';
+        updateDownload();
         return;
     }
     getSiteMeta(slug(), meta => {
@@ -768,6 +830,7 @@ function init() {
                 opsAwesomplete.list = ops;
                 opsAwesomplete.input.focus();
             });
+            updateDownload();
         }
     });
     on('#txtRequest', {
