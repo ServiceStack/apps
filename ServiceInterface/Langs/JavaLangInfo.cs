@@ -31,7 +31,8 @@ public class App {
         JsonServiceClient client = new JsonServiceClient(
             ""{BASE_URL}"");{REQUIRES_AUTH}
 
-        {API_COMMENT}{RESPONSE} response = client.send(({REQUEST}) new {REQUEST}(){REQUEST_BODY});
+        {API_COMMENT}{RESPONSE} response = client.send(({REQUEST})
+        {API_COMMENT}    new {REQUEST}(){REQUEST_BODY});
 
         {API_COMMENT}Inspect.printDump(response);
         {INSPECT_VARS}

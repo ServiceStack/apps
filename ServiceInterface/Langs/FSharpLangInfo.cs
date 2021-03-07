@@ -46,9 +46,9 @@ module Program =
     [<EntryPoint>]
     let main args =
 
-        let client = new JsonServiceClient(""{BASE_URL}"")
+        let client = new JsonServiceClient(""{BASE_URL}""){REQUIRES_AUTH}
 
-        let response = client.Send(new {REQUEST}({REQUEST_BODY})){REQUIRES_AUTH}
+        let response = client.Send(new {REQUEST}({REQUEST_BODY}))
 
         {API_COMMENT}response.PrintDump()
         {INSPECT_VARS}

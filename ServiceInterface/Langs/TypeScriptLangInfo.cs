@@ -45,29 +45,29 @@ import { Inspect } from 'gistcafe';
 let client = new JsonServiceClient('{BASE_URL}');
 
 (async () => {
-{REQUIRES_AUTH}
-{API_COMMENT}let response = await client.get(new {REQUEST}({{REQUEST_BODY}
-{API_COMMENT}}));
+    {REQUIRES_AUTH}
+    {API_COMMENT}let response = await client.get(new {REQUEST}({{REQUEST_BODY}
+    {API_COMMENT}}));
 
-{API_COMMENT}Inspect.printDump(response);
-{INSPECT_VARS}
+    {API_COMMENT}Inspect.printDump(response);
+    {INSPECT_VARS}
 
 })();
 ",
             };
             InspectVarsResponse = "Inspect.vars({ response });";
             RequiresAuthTemplate = @"
-// Authentication is required
-// client.post(new Authenticate({ 
-//     provider: 'credentials',
-//     userName: '...',
-//     password: '...'}));";
+    // Authentication is required
+    // client.post(new Authenticate({ 
+    //     provider: 'credentials',
+    //     userName: '...',
+    //     password: '...'}));";
         }
         private TypeScriptGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"    {prop.Name.ToCamelCase()}: {propValue},";
+            $"        {prop.Name.ToCamelCase()}: {propValue},";
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "[" + collectionBody + "]";
