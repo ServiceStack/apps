@@ -242,7 +242,7 @@ INPUT.text-3xl { line-height: 2.5rem }
     </div>
 </div>
 
-<div class="foot show-enabled border-t-1 py-2 text-center text-gray-500" style="margin-top:12rem">
+<div class="foot show-embed border-t-1 py-2 text-center text-gray-500" style="margin-top:12rem">
     <div>
         <a href="https://servicestack.net" title="servicestack.net" class="opacity-25 hover:opacity-100">
             <svg class="w-6 h-6 inline-block" viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'> <style> .path{} </style><g id='servicestack-svg'><path class='path' stroke='null' d='m16.564516,43.33871c16.307057,2.035887 54.629638,20.41875 60.67742,46.306452l-78.241936,0c19.859879,-1.616734 36.825605,-27.344758 17.564516,-46.306452zm6.387097,-30.33871c6.446976,7.105645 9.520766,16.74617 9.26129,26.666129c16.546573,6.726411 41.376412,24.690121 46.625807,49.979033l19.161291,0c-8.123589,-43.132863 -54.529839,-73.551412 -75.048388,-76.645162z' /></g></svg>
@@ -556,8 +556,12 @@ function showEmbed(r) {
 
 function onUrlChange() {
     let $baseUrl = $('#baseUrl'), $scheme = $('#scheme'), $lang = $('.lang.active');
+    let oldBaseUrl = M.baseUrl;
     M.setScheme($scheme.value);
     M.setBaseUrl($baseUrl.value);
+    if (M.baseUrl !== oldBaseUrl) {
+        clearForm();
+    }
     M.setLang($lang ? $lang.getAttribute('data-lang') : null);
     $scheme.value = M.scheme;
     $baseUrl.value = M.baseUrl;
@@ -585,6 +589,11 @@ function clearErrorSummary() {
     $error.querySelector('b').innerHTML = '';
     $error.querySelector('p').innerHTML = '';
     M.setErrorStatus(null);
+}
+function clearForm() {
+    clearErrorSummary();
+    $('#apiForm').innerHTML = '';
+    updateDownload();
 }
 
 window.onhashchange = function () {
@@ -872,8 +881,7 @@ function clearAwesompleteInstances() {
 
 function selectOp(opName) {
     if (!opName) {
-        $('#apiForm').innerHTML = '';
-        updateDownload();
+        clearForm();
         return;
     }
     getSiteMeta(M.slug(), meta => {
