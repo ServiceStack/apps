@@ -28,6 +28,10 @@ a { color: #007bff }
 .loading .hide-loading{display:none}
 .has-embed .show-embed{display:block}
 
+[data-open] { display: none; cursor: pointer }
+.csharp .show-csharp,.typescript .show-typescript,.dart .show-dart,.java .show-java,.kotlin .show-kotlin,.swift .show-swift,.vbnet .show-vbnet,.fsharp .show-fsharp
+{ display: flex }
+
 .nourl .lang {filter:grayscale(100%);opacity:.5;box-shadow:none;cursor:default}
 .lang img {transform:scale(.90)}
 .lang:hover {background-color:#fff}
@@ -157,7 +161,7 @@ INPUT.text-3xl { line-height: 2.5rem }
         
         <div id="customize-embed" class="flex">
             <div class="flex-1">
-                <div id="tags" class="mt-2 flex"></div>
+                <div id="tags" class="mt-2 flex" style="min-height:1.5rem"></div>
                 <div class="show-auth absolute" style="margin:1.3em 0 0 565px;z-index: 1">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
                         <title>Requires Authentication</title>
@@ -174,7 +178,10 @@ INPUT.text-3xl { line-height: 2.5rem }
             <div class="flex-1">
                 <div class="mt-2 text-gray-500 font-semibold uppercase text-right">Customize Download</div>
                 <label id="customize-download">
-                    <input id="txtProjectName" type="text" spellcheck="false" placeholder="Project Name"
+                    <input id="txtProjectName" type="text" spellcheck="false" placeholder="ProjectName"
+                           onkeypress="return event.charCode !== 32"
+                           onchange="this.value = this.value.replace(/\s/g,'')"
+                           oninput="updateDownload()"
                            class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
                 </label>
                 <div id="customForm" class="mt-2 w-full">
@@ -248,6 +255,86 @@ INPUT.text-3xl { line-height: 2.5rem }
 let LOG = location.search.indexOf('log=1') >= 0 || true;
 /** @type {JsonServiceClient} */
 let client = null;
+let LANGS = ['csharp','typescript','dart','java','kotlin','swift','vbnet','fsharp'];
+let M = {
+    baseUrl: '',
+    scheme: 'https',
+    requiresAuth: false,
+    isEnabled: false,
+    lang: '',
+    op: null,
+    include:'',
+    errorStatus:null,
+    setBaseUrl(baseUrl) {
+        this.baseUrl = baseUrl;
+        if (this.baseUrl.indexOf('://') >= 0) {
+            this.scheme = leftPart(this.baseUrl,'://');
+            this.baseUrl = rightPart(this.baseUrl,'://');
+        }
+        this.syncClasses();
+        return this.baseUrl;
+    },
+    setScheme(value) {
+      this.scheme = value;
+      this.syncClasses();
+      return this.scheme;
+    },
+    setInclude(id) {
+        localStorage.setItem('include:active',this.include=id);
+        this.syncClasses();
+    },
+    getInclude() {
+        return localStorage.getItem('include:active') || 'includeAll';
+    },
+    setLang(lang) {
+        if (lang && LANGS.indexOf(lang) === -1) {
+            if (LOG) console.log(`Not a valid language: ${lang}`);
+            return;
+        }
+        localStorage.setItem('lang:active',this.lang=lang);
+        activateLang();
+        this.syncClasses();
+    },
+    getLang() {
+        return localStorage.getItem('lang:active') || 'csharp';
+    },
+    setErrorStatus(status) {
+        this.errorStatus = status;
+        this.syncClasses();
+    },
+    slug() {
+        return this.baseUrl ? urlToSlug(this.baseUrl) : null;
+    },
+    reset() {
+        $('#baseUrl').value = $('#txtRequest').value = $('#apiForm').innerHTML = this.baseUrl = '';
+        this.requiresAuth = this.isEnabled = false;
+        this.errorStatus = this.op = null;
+        clearErrorSummary();
+        updateDownload();
+        activateLang();
+        onUrlChange();
+        this.syncClasses();
+    },
+    syncClasses() {
+        let cls = ['m-0 font-sans bg-gray-50'];
+        if (!this.baseUrl) {
+            cls.push('nourl');
+        } else if (this.baseUrl && this.lang) {
+            cls.push('has-embed');
+        }
+        if (this.lang) {
+            cls.push(this.lang);
+        }
+        if (this.errorStatus) {
+            cls.push('has-error');
+        }
+        if (this.requiresAuth) {
+            cls.push('requires-auth');
+        }
+        document.body.className = cls.join(' ');
+    }
+};
+
 
 function $(sel, el) {
     return typeof sel === "string" ? (el || document).querySelector(sel) : sel || null;
@@ -338,6 +425,8 @@ function unSlash(urlComponent) {
 
 function handleHash(path) {
     if (!path) return;
+    if (path.indexOf('[') >= 0)
+        throw new Error(`Invalid path: ${path}`);
     let segments = path.split('/');
     let url = urlFromSlug(segments[0]);
     let parts = url.split('://');
@@ -350,14 +439,15 @@ function handleHash(path) {
         if (scheme !== 'http' && scheme !== 'https') {
             return urlError({ message:'Invalid Scheme', field:'#scheme' });
         } else {
-            $('#scheme').value = scheme;
+            M.setScheme(scheme);
         }
     }
-    $('#baseUrl').value = baseUrl;
+    M.setBaseUrl(baseUrl);
+    $('#baseUrl').value = M.baseUrl;
+    $('#scheme').value = M.scheme;
     if (segments.length > 1) {
         let lang = segments[1];
-        let $lang = $(`.lang[data-lang='${lang}']`);
-        if ($lang) selectLang($lang)
+        M.setLang(lang);
     }
     onUrlChange();
 }
@@ -366,48 +456,30 @@ function clearHash() {
     history.pushState("", document.title, window.location.pathname + window.location.search);
 }
 function updateHash() {
-    if (document.body.classList.contains('nourl')) {
+    if (!M.baseUrl) {
         clearHash();
     } else {
         let activeLang = $('.lang.active');
-        let url = $('#baseUrl').value;
+        let url = M.baseUrl;
         if (url.indexOf('://') === -1)
-            url = $('#scheme').value + '://' + url;
+            url = M.scheme + '://' + url;
         let slug = urlToSlug(url);
         location.hash = activeLang
-            ? `${slug}/${activeLang.getAttribute('data-lang')}`
+            ? `${slug}/${activeLang.getAttribute('data-lang')}` 
             : slug;
     }
 }
 
-function setIncludeSelected(id) {
-    localStorage.setItem('include:active',id);
-}
-function lastIncludeSelected() {
-    return localStorage.getItem('include:active') || 'includeAll';
-}
-function setLastLangSelected(value) {
-    localStorage.setItem('lang:active',value);
-}
-function lastLangSelected() {
-    return localStorage.getItem('lang:active') || 'csharp';
-}
-function lastLangElement() {
-    return $(`.lang[data-lang='${lastLangSelected()}']`) || $(`.langs :first-child`);
-}
-
-function clearLangs(e) {
-    $$('.lang.active').forEach(el => { if (el !== e) el.classList.remove('active') });
+function activateLang() {
+    $$('.lang').forEach(el => { 
+        if (el.getAttribute('data-lang') === M.lang) 
+            el.classList.add('active');
+        else
+            el.classList.remove('active');
+    });
 }
 function clearTags(e) {
     $$('.tag.active').forEach(el => { if (el !== e) el.classList.remove('active') });
-}
-
-function flatMap(f, xs) {
-    return xs.reduce((r, x) => r.concat(f(x)), [])
-}
-function uniq(xs) {
-    return Array.from(new Set(xs)).sort((x,y) => x > y ? 1 : -1);
 }
 
 function getOperations(meta, tag) {
@@ -417,11 +489,8 @@ function getOperations(meta, tag) {
 }
 
 let opsAwesomplete = null; 
-function selectLang(e) {
-    clearLangs(e);
-    e.classList.toggle('active');
-    let lang = e.getAttribute('data-lang');
-    setLastLangSelected(lang);
+function updateLang() {
+    if (!M.lang) return;
 
     let $form = $('#apiForm form');
     if (LOG) console.log('$form',$form);
@@ -432,13 +501,13 @@ function selectLang(e) {
 
     clearErrorSummary();
     setLoading('#embed-loading');
-    client.get(new GistRef({ slug:slug(), lang:lang }))
+    client.get(new GistRef({ slug:M.slug(), lang:M.lang }))
         .then(r => {
             showEmbed(r);
         })
         .finally(() => endLoading('#embed-loading'));
     
-    getSiteMeta(slug(), meta => {
+    getSiteMeta(M.slug(), meta => {
         let sortFn = (x,y) => x > y ? 1 : -1;
         let ops = getOperations(meta);
         //if (LOG) console.log(`selectLang ops *`, ops);
@@ -469,7 +538,6 @@ function getSiteMeta(slug, cb) {
 }
 
 function setLoading(sel) {
-    document.body.classList.add('has-embed');
     $$(sel).forEach(el => el.parentElement.classList.add('loading'));
 }
 function endLoading(sel) {
@@ -486,25 +554,14 @@ function showEmbed(r) {
     $embed.innerHTML = `<iframe id="iframe" class="w-wide-section h-embed" src="${embedUrl}">`;
 }
 
-function slug() {
-    let baseUrl = $('#baseUrl').value;
-    return baseUrl ? urlToSlug(baseUrl) : null;
-}
-
 function onUrlChange() {
-    let $baseUrl = $('#baseUrl'); 
-    let value = $baseUrl.value;
-    if (value.indexOf('://') >= 0) {
-        $baseUrl.value = rightPart(value,'://');
-        $('#scheme').value = leftPart(value,'://');
-    }
-    if (value) {
-        document.body.classList.remove('nourl');
-        if (!$('.lang.active')) selectLang(lastLangElement())
-    } else {
-        document.body.classList.add('nourl');
-        document.body.classList.remove('has-embed');
-    }
+    let $baseUrl = $('#baseUrl'), $scheme = $('#scheme'), $lang = $('.lang.active');
+    M.setScheme($scheme.value);
+    M.setBaseUrl($baseUrl.value);
+    M.setLang($lang ? $lang.getAttribute('data-lang') : null);
+    $scheme.value = M.scheme;
+    $baseUrl.value = M.baseUrl;
+    updateLang($lang);
     updateHash();
 }
 
@@ -512,11 +569,7 @@ on('#formUrl', { submit: e => { e.preventDefault(); onUrlChange(); } });
 on('#scheme,#baseUrl', { change: onUrlChange });
 on('#btn-clear div', {
     click: function (e) {
-        $('#baseUrl').value = $('#txtRequest').value = $('#apiForm').innerHTML = '';
-        updateDownload();
-        document.body.classList.remove('requires-auth');
-        clearLangs();
-        onUrlChange();
+        M.reset();
     }
 })
 
@@ -525,13 +578,13 @@ function setError(status, defaultTitle) {
     $error.querySelector('b').innerHTML = status.errorCode || defaultTitle || 'Error';
     let pos = status.message ? status.message.indexOf('(Parameter ') : -1;
     $error.querySelector('p').innerHTML = pos >= 0 ? status.message.substring(0,pos) : status.message;
-    document.body.classList.add('has-error');
+    M.setErrorStatus(status);
 }
 function clearErrorSummary() { 
-    document.body.classList.remove('has-error');
     let $error = $('#error-summary');
     $error.querySelector('b').innerHTML = '';
     $error.querySelector('p').innerHTML = '';
+    M.setErrorStatus(null);
 }
 
 window.onhashchange = function () {
@@ -550,6 +603,9 @@ function trimPrefixes(str,c) {
 }
 let NumericTypes = ['Byte','SByte','Int16','Int32','Int64','UInt16','UInt32','UInt64','Single','Double','Decimal'];
 function isNumeric(type) { return NumericTypes.indexOf(type) >= 0; }
+
+let BuiltInTypes = ['String','Boolean','DateTime','TimeSpan','Char','Guid'].concat(NumericTypes);
+let IgnoreTypes = ['KeyValuePair`2'];
 
 function typeInfo(meta,prop) {
     let type = prop.type === "Nullable`1"
@@ -574,20 +630,27 @@ function typeInfo(meta,prop) {
     }
     let metaType = findType(meta, type, prop.typeNamespace);
     let info = {
+        meta: metaType,
         type: type,
+        namespace: (metaType && metaType.namespace) || prop.typeNamespace,
         isArray: isArray,
         elementType: elementType,
         isEnum: enumType != null,
         enumType: enumType,
         collectionType: collectionType,
-        isDictionary: collectionType && collectionType.indexOf('Dictionary') >= 0,
+        isDictionary: collectionType != null && collectionType.indexOf('Dictionary') >= 0,
         isString: type === 'String',
+        isChar: type === 'Char',
+        isGuid: type === 'Guid',
         isNumeric: isNumeric(type),
         isDateTime: type === 'DateTime' || type === 'DateTimeOffset',
         isTimeSpan: type === 'TimeSpan',
         isBoolean: type === 'Boolean',
-        isClass: enumType == null && metaType !== null,
+        isGeneric: type.indexOf('`') >= 0,
+        isBuiltIn: elementType || BuiltInTypes.indexOf(type) >= 0,
     };
+    info.isClass = metaType != null || (!info.isNumeric && !BuiltInTypes.indexOf(type));
+    info.ignore = IgnoreTypes.indexOf(type) >= 0 || info.isDictionary || (BuiltInTypes.indexOf(type) === -1 && !info.elementType);
     if (LOG) console.log(`typeInfo(${prop.type})`, info);
     return info;
 }
@@ -624,7 +687,7 @@ function createInput(prop,info,meta) {
     if (info.elementType && isNumeric(info.elementType)) {
         attrs.title = "comma-delimited list of numbers";
         attrs.pattern = "[0-9.,]*";
-        attrs.onblur = "this.reportValidity()"
+        attrs.onblur = "this.reportValidity()";
     }
     else if (info.isNumeric) {
         attrs.type = 'number';
@@ -636,6 +699,19 @@ function createInput(prop,info,meta) {
     }
     else if (info.isDateTime) {
         attrs.type = 'datetime-local';
+    }
+    else if (info.isTimeSpan) {
+        attrs.pattern = "^((((?:-?0*\\d+\\.)?(?:0*)(?:2[0-3]|1[0-9]|[0-9]))(?::0*([0-5]?[0-9]))?(?::0*((?:[0-5]?[0-9])(?:\\.\\d{0,7})?)))|(\\d+))?$";
+        attrs.title = "valid TimeSpan format: (D.)HH:MM:SS(.fff)";
+        attrs.onblur = "this.reportValidity()";
+    }
+    else if (info.isChar) {
+        attrs.maxlength = 1;
+    }
+    else if (info.isGuid) {
+        attrs.pattern = "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
+        attrs.title = "Valid UUID format";
+        attrs.onblur = "this.value = toUUID(this.value); this.reportValidity()";
     }
     return `<input ${htmlAttrs(attrs)}>`;
 }
@@ -659,8 +735,17 @@ function createControl(prop,info,meta,opt) {
         ${createInput(prop,info,meta)}
     </div>`;
 }
+
 function isAutoQuery(request) {
     return request.inherits && request.inherits.name.startsWith('Query');
+}
+
+function toUUID(s) {
+    if (!s) return s;
+    if (s.length === 32) {
+        return s.substring(0,8) + '-' + s.substring(8,12) + '-' + s.substring(12,16) + '-' + s.substring(16,20) + '-' + s.substring(20);
+    }
+    return s;
 }
 
 function createForm(request, meta) {
@@ -676,9 +761,9 @@ function createForm(request, meta) {
     let props = typeProperties(meta,request);
     props.forEach(prop => {
         let info = typeInfo(meta,prop);
-        if (info.isDictionary) return;
+        if (info.ignore) return;
         let opt = {
-            colClass: info.isNumeric || info.isDateTime || info.isTimeSpan ? 'col-span-3' : 'col-span-6'
+            colClass: info.isNumeric || info.isDateTime || info.isTimeSpan || info.isChar ? 'col-span-3' : 'col-span-6'
         };
         if (aqRequest) {
             if (prop.name === 'Include')
@@ -695,7 +780,7 @@ function createForm(request, meta) {
     
     sb.append(`<div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
                 <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  Apply
+                  Update
                 </button>
             </div>
         </div>
@@ -710,8 +795,8 @@ function applyForm(form) {
     let obj = serializeToObject(form);
     if (LOG) console.log('applyForm', opName, obj);
     if (!opName) return false;
-    let url = combinePaths(location.origin,'gists',slug(),lastLangSelected(),opName);
-    getSiteMeta(slug(), meta => {
+    let url = combinePaths(location.origin,'gists',M.slug(),M.getLang(),opName);
+    getSiteMeta(M.slug(), meta => {
         let op = meta.operations.find(x => x.request.name === opName);
         let request = op.request;
         let args = new StringBuffer();
@@ -749,7 +834,7 @@ function updateDownload() {
         dtoOptions.push({ id:'includeRequest', label: `Only ${$txtRequest.value} DTOs`, value: '' });
     }
     
-    let selectedInclude = lastIncludeSelected();
+    let selectedInclude = M.getInclude();
     let selectedOption = dtoOptions.find(x => x.id === selectedInclude) || dtoOptions[dtoOptions.length-1];
     selectedOption.checked = true;
 
@@ -757,24 +842,24 @@ function updateDownload() {
     dtoOptions.forEach(x => {
         let checked = x.checked === true ? ' checked' : '';
         sb.append(`<div class="flex items-center">
-            <input id="${x.id}" name="include" value="${x.value}" ${checked} type="radio" onchange="setIncludeSelected('${x.id}')" 
+            <input id="${x.id}" name="include" value="${x.value}" ${checked} type="radio" onchange="M.setInclude('${x.id}')" 
                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
                 <label for="${x.id}" class="ml-3 block text-sm font-medium text-gray-700">${x.label}</label>
         </div>`);
     });
     let includeHtml = `<fieldset>
           <div>
-            <legend class="text-base font-medium text-gray-900">Include DTOs</legend>
+            <legend class="uppercase text-base font-medium text-gray-900">Include DTOs</legend>
           </div>
         <div class="mt-4 space-y-4">${sb.toString()}</div>
     </fieldset>`;
     
-    $('#customForm').innerHTML = `<div class="shadow overflow-hidden sm:rounded">
-      <div class="px-4 py-5 bg-white sm:p-6">
-        <div class="">
-            ${includeHtml}
-        </div>
-    </div>`;
+    let projectName = $('#txtProjectName').value || 'MyApp';
+
+    $('#includeDtos').innerHTML = includeHtml;
+    $('#lblProject').innerHTML = `${projectName}.zip`;
+    
+    //$('#customForm').innerHTML = ``;
 }
 
 let awesompleteInstances = [];
@@ -791,7 +876,7 @@ function selectOp(opName) {
         updateDownload();
         return;
     }
-    getSiteMeta(slug(), meta => {
+    getSiteMeta(M.slug(), meta => {
         let op = meta.operations.find(x => x.request.name === opName);
         if (!op) return;
         if (op.requiresAuth)
@@ -853,8 +938,10 @@ function selectOp(opName) {
 }
 
 function init() {
-    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd } = exports;
-    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd });
+    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, 
+          StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap } = exports;
+    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, 
+        enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap });
     client = new JsonServiceClient();
     client.exceptionFilter = (res,err) => {
         setError(err.responseStatus || err, res.statusText || res.status);
@@ -866,7 +953,11 @@ function init() {
     }
     bindHandlers({
         selectLang: function (e) {
-            selectLang(this);
+            let lang = !this.classList.contains('active') 
+                ? this.getAttribute('data-lang') 
+                : null;
+            M.setLang(lang);
+            updateLang();
             updateHash();
         },
         selectTag: function () {
@@ -876,13 +967,16 @@ function init() {
                 ? this.getAttribute('data-tag')
                 : null;
             $('#txtRequest').value = '';
-            getSiteMeta(slug(), meta => {
+            getSiteMeta(M.slug(), meta => {
                 let ops = getOperations(meta, tag);
                 if (LOG) console.log(`selectTag ops ${tag ?? '*'}`, ops);
                 opsAwesomplete.list = ops;
                 opsAwesomplete.input.focus();
             });
             updateDownload();
+        },
+        openWith: function () {
+            //alert('opening with ' + this.getAttribute('data-open'));
         }
     });
     on('#txtRequest', {
