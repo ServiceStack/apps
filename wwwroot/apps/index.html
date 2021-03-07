@@ -177,7 +177,59 @@ INPUT.text-3xl { line-height: 2.5rem }
                     <input id="txtProjectName" type="text" spellcheck="false" placeholder="Project Name"
                            class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
                 </label>
-                <div id="customForm" class="mt-2 w-full"></div>
+                <div id="customForm" class="mt-2 w-full">
+                    <div class="shadow overflow-hidden sm:rounded">
+                        <div class="px-4 py-5 bg-white sm:p-6">
+                            <div id="includeDtos"></div>
+                            <h3 class="uppercase my-4 text-base font-medium text-gray-900">Download</h3>
+                            <div id="zip">
+                                <a href="" class="flex justify-center">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                                    <span id="lblProject" class="ml-1 text-2xl leading-9">MyApp</span>
+                                </a>
+                            </div>
+                            <h3 class="uppercase my-4 text-base font-medium text-gray-900">Open With...</h3>
+                            <div id="xopen" class="flex justify-center gap-5">
+                                <div data-open="folder" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
+                                    <img class="w-10 h-10" src="assets/img/folder.svg" alt="Folder Icon">
+                                    <span class="text-gray-500">Folder</span>
+                                </div>
+                                <div data-open="vscode" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
+                                    <img class="w-10 h-10" src="assets/img/vscode.svg" alt="VS Code Icon">
+                                    <span class="text-gray-500">VS Code</span>
+                                </div>
+                                <div data-open="rider" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet show-fsharp">
+                                    <img class="w-10 h-10" src="assets/img/rider.svg" alt="Rider Icon">
+                                    <span class="text-gray-500">Rider</span>
+                                </div>
+                                <div data-open="devenv" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet show-fsharp">
+                                    <img class="w-10 h-10" src="assets/img/visualstudio.svg" alt="Visual Studio Icon">
+                                    <span class="text-gray-500">Visual Studio</span>
+                                </div>
+                                <div data-open="webstorm" data-click="openWith" class="flex flex-col items-center text-center show-typescript show-dart">
+                                    <img class="w-10 h-10" src="assets/img/webstorm.svg" alt="Visual Studio Icon">
+                                    <span class="text-gray-500">WebStorm</span>
+                                </div>
+                                <div data-open="androidstudio" data-click="openWith" class="flex flex-col items-center text-center show-dart show-java show-kotlin">
+                                    <img class="w-10 h-10" src="assets/img/androidstudio.svg" alt="Android Studio Icon">
+                                    <span class="text-gray-500">Android Studio</span>
+                                </div>
+                                <div data-open="idea" data-click="openWith" class="flex flex-col items-center text-center show-java show-kotlin">
+                                    <img class="w-10 h-10" src="assets/img/idea.svg" alt="Intellij IDEA Icon">
+                                    <span class="text-gray-500">Intellij IDEA</span>
+                                </div>
+                                <div data-open="appcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
+                                    <img class="w-10 h-10" src="assets/img/appcode.svg" alt="AppCode Icon">
+                                    <span class="text-gray-500">App Code</span>
+                                </div>
+                                <div data-open="xcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
+                                    <img class="w-10 h-10" src="assets/img/xcode.svg" alt="Xcode Icon">
+                                    <span class="text-gray-500">Xcode</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
