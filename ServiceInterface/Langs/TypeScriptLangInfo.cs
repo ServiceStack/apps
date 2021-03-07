@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using ServiceStack;
 using ServiceStack.NativeTypes.TypeScript;
+using ServiceStack.Text.Common;
 
 namespace Apps.ServiceInterface.Langs
 {
@@ -71,5 +74,9 @@ let client = new JsonServiceClient('{BASE_URL}');
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "[" + collectionBody + "]";
+
+        public override string GetDateTimeLiteral(string value) => New($"Date('{ISO8601(value)}')");
+        public override string GetTimeSpanLiteral(string value) => $"\"{value.ConvertTo<TimeSpan>():c}\"";
+        public override string GetGuidLiteral(string value) => $"\"{value.ConvertTo<Guid>():D}\"";
     }
 }

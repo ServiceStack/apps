@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ServiceStack;
 using ServiceStack.NativeTypes.VbNet;
@@ -75,5 +76,8 @@ End Module
 
             return " With {" + to + "\n        }";
         }
+
+        public override string New(string ctor) => "New " + ctor;
+        public override string GetCharLiteral(string value) => $"\"{value.ConvertTo<Char>()}\"C";
     }
 }

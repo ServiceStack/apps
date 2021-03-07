@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using ServiceStack;
 using ServiceStack.NativeTypes.Kotlin;
+using ServiceStack.Text.Support;
 
 namespace Apps.ServiceInterface.Langs
 {
@@ -57,7 +60,7 @@ tasks.test {
 dependencies {
     implementation(kotlin(""stdlib""))
     implementation(""com.google.code.gson:gson:2.8.6"")
-    implementation(""net.servicestack:client:1.0.44"")
+    implementation(""net.servicestack:client:1.0.45"")
     implementation(""net.servicestack:gistcafe:0.0.7"")
     testImplementation(platform(""org.junit:junit-bom:5.7.0""))
     testImplementation(""org.junit.jupiter:junit-jupiter"")
@@ -80,5 +83,11 @@ dependencies {
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "arrayListOf(" + collectionBody + ")";
+
+        public override string New(string ctor) => ctor; //no new
+        public override string GetDateTimeLiteral(string value) => $"DateTime.parse(\"{ISO8601(value)}\")";
+        public override string GetTimeSpanLiteral(string value) => $"TimeSpan.parse(\"{XsdDuration(value)}\")";
+        public override string GetGuidLiteral(string value) => $"Guid.parse(\"{value.ConvertTo<Guid>():D}\")";
+        public override string GetCharLiteral(string value) => $"\"{value.ConvertTo<char>()}\"";
     }
 }

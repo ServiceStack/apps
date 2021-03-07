@@ -121,5 +121,7 @@ module Program =
                 ? to.Substring(0, to.Length - 1) 
                 : to;
         }
+
+        public override string New(string ctor) => ctor; //no new
     }
 }

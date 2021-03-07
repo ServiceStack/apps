@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ServiceStack;
 using ServiceStack.Text;
+using ServiceStack.Text.Support;
 
 namespace Apps.ServiceInterface.Langs
 {
@@ -89,6 +90,8 @@ namespace Apps.ServiceInterface.Langs
                         TypeNamespace = "System",
                     };
                     var literalValue = GetLiteralValue(item, itemProp, types);
+                    if (string.IsNullOrEmpty(literalValue))
+                        continue;
                     if (sb.Length > 0)
                         sb.Append($"{ItemsSep} ");
                     sb.Append(literalValue);
@@ -108,6 +111,10 @@ namespace Apps.ServiceInterface.Langs
                 return GetTimeSpanLiteral(value);
             if (useType == nameof(Boolean))
                 return GetBoolLiteral(value);
+            if (useType == nameof(Guid))
+                return GetGuidLiteral(value);
+            if (useType == nameof(Char))
+                return GetCharLiteral(value);
 
             return null;
         }
@@ -128,28 +135,45 @@ namespace Apps.ServiceInterface.Langs
 
         public virtual string GetNumericTypeLiteral(string value) => value;
 
-        public virtual string GetTimeSpanLiteral(string value)
-        {
-            var timeSpanValue = value.ConvertTo<TimeSpan>();
-            return $"new TimeSpan({timeSpanValue.Ticks})";
-        }
-
         public virtual string GetBoolLiteral(string value)
         {
             var boolValue = value.ConvertTo<bool>();
             return boolValue ? "true" : "false";
         }
 
+        public virtual string New(string ctor) => "new " + ctor;
+
+        public virtual string ISO8601(string value) =>
+            value.ConvertTo<DateTime>().ToUniversalTime().ToString("u").Replace(' ', 'T'); //"O" generates unwanted fractions
+        public virtual string XsdDuration(string value) => TimeSpanConverter.ToXsdDuration(value.ConvertTo<TimeSpan>());
+        public virtual string UUID(string value) => value.ConvertTo<Guid>().ToString("D");
+
         public virtual string GetDateTimeLiteral(string value)
         {
-            var dateValue = value.ConvertTo<DateTime>();
+            var dateValue = value.ConvertTo<DateTime>().ToUniversalTime();
             if (dateValue.Hour + dateValue.Minute + dateValue.Second + dateValue.Millisecond == 0)
-                return $"new DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day})";
+                return New($"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},DateTimeKind.Utc)");
             if (dateValue.Millisecond == 0)
-                return
-                    $"new DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second})";
-            return
-                $"new DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second},{dateValue.Millisecond})";
+                return New($"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second},DateTimeKind.Utc)");
+            return New($"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second},{dateValue.Millisecond},DateTimeKind.Utc)");
+        }
+
+        public virtual string GetTimeSpanLiteral(string value)
+        {
+            var from = value.ConvertTo<TimeSpan>();
+            var sb = StringBuilderCache.Allocate();
+            if (from.Days > 0)
+                sb.Append(from.Days);
+            if (from.Hours > 0)
+                sb.Append(sb.Length > 0 ? "," : "").Append(from.Hours);
+            if (from.Minutes > 0)
+                sb.Append(sb.Length > 0 ? "," : "").Append(from.Minutes);
+            if (from.Seconds > 0)
+                sb.Append(sb.Length > 0 ? "," : "").Append(from.Seconds);
+            if (from.Milliseconds > 0)
+                sb.Append(sb.Length > 0 ? "," : "").Append(from.Milliseconds);
+            var to = New($"TimeSpan({StringBuilderCache.ReturnAndFree(sb)})");
+            return to;
         }
 
         public virtual string GetLiteralCollection(bool isArray, string collectionBody, string collectionType)
@@ -173,5 +197,8 @@ namespace Apps.ServiceInterface.Langs
             }
             return "var";
         }
+
+        public virtual string GetCharLiteral(string value) => $"'{value.ConvertTo<Char>()}'";
+        public virtual string GetGuidLiteral(string value) => New($"Guid(\"{value.ConvertTo<Guid>():D}\")");
     }
 }
