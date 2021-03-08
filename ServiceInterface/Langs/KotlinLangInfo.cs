@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using ServiceStack;
 using ServiceStack.NativeTypes.Kotlin;
-using ServiceStack.Text.Support;
 
 namespace Apps.ServiceInterface.Langs
 {
@@ -17,8 +15,7 @@ namespace Apps.ServiceInterface.Langs
             DtosPathPrefix = "src\\main\\kotlin\\myapp\\";
             Files = new Dictionary<string, string> {
                 ["src\\main\\kotlin\\myapp\\App.kt"] = @"package myapp
-import net.servicestack.client.JsonServiceClient
-import net.servicestack.gistcafe.Inspect
+import net.servicestack.client.*
 
 fun main(args: Array<String>) {
     val client = JsonServiceClient(""{BASE_URL}""){REQUIRES_AUTH}
@@ -60,8 +57,7 @@ tasks.test {
 dependencies {
     implementation(kotlin(""stdlib""))
     implementation(""com.google.code.gson:gson:2.8.6"")
-    implementation(""net.servicestack:client:1.0.45"")
-    implementation(""net.servicestack:gistcafe:0.0.7"")
+    implementation(""net.servicestack:client:1.0.46"")
     testImplementation(platform(""org.junit:junit-bom:5.7.0""))
     testImplementation(""org.junit.jupiter:junit-jupiter"")
 }
@@ -79,7 +75,21 @@ dependencies {
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"        {prop.Name.ToCamelCase()} = {propValue}";
+            $"        {Gen.GetPropertyName(prop.Name)} = {Value(prop.Type, propValue)}";
+        /*
+        uLong = 9.toBigInteger()
+        Float = 10.toFloat()
+        Double = 11.0
+        decimal = 12.toBigDecimal()
+         */
+        public override string Value(string propType, string propValue) => propType switch {
+            nameof(Int32) => propValue,
+            nameof(Double) => Float(propValue),
+            nameof(UInt64) => $"{propValue}.toBigInteger()",
+            nameof(Single) => $"{Float(propValue)}.toFloat()",
+            nameof(Decimal) => $"{propValue}.toBigDecimal()",
+            _ => propValue
+        };
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "arrayListOf(" + collectionBody + ")";

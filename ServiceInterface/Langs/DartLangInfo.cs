@@ -57,7 +57,14 @@ dev_dependencies:
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"    ..{prop.Name.ToCamelCase()} = {propValue}";
+            $"    ..{Gen.GetPropertyName(prop.Name)} = {propValue}";
+
+        public override string Value(string propType, string propValue) => propType switch {
+            nameof(Double) => Float(propValue),
+            nameof(Single) => Float(propValue),
+            nameof(Decimal) => Float(propValue),
+            _ => propValue
+        };
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "[" + collectionBody + "]";

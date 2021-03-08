@@ -51,8 +51,7 @@ namespace Apps.ServiceInterface.Langs
 
         public virtual string RequestBodyFilter(string assignments) => assignments.TrimEnd();
 
-        public virtual string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"    {prop.Name} = {propValue},";
+        public abstract string GetPropertyAssignment(MetadataPropertyType prop, string propValue);
 
         public virtual string GetLiteralValue(string value, MetadataPropertyType prop, MetadataTypes types)
         {
@@ -67,18 +66,19 @@ namespace Apps.ServiceInterface.Langs
                 ? types.FindType(prop.Type, prop.TypeNamespace)
                 : null;
             var collectionType = prop.TypeNamespace == "System.Collections.Generic"
-                ? GetTypeName(prop.Type, prop.GenericArgs) 
+                ? GetTypeName(prop.Type, prop.GenericArgs)
                 : null;
             if (collectionType != null)
             {
-                elementType = prop.GenericArgs.Length == 1 
+                elementType = prop.GenericArgs.Length == 1
                     ? prop.GenericArgs[0]
                     : prop.GenericArgs.Length == 2
-                        ? $"KeyValuePair<{string.Join(',',prop.GenericArgs)}>"
+                        ? $"KeyValuePair<{string.Join(',', prop.GenericArgs)}>"
                         : null;
                 if (collectionType.IndexOf("Dictionary", StringComparison.Ordinal) >= 0)
                     return null; //not supported
             }
+
             if (isArray || collectionType != null)
             {
                 var items = value.FromJsv<List<string>>();
@@ -90,15 +90,18 @@ namespace Apps.ServiceInterface.Langs
                         TypeNamespace = "System",
                     };
                     var literalValue = GetLiteralValue(item, itemProp, types);
+                    literalValue = Value(elementType, literalValue);
                     if (string.IsNullOrEmpty(literalValue))
                         continue;
                     if (sb.Length > 0)
                         sb.Append($"{ItemsSep} ");
                     sb.Append(literalValue);
                 }
+
                 var collectionBody = StringBuilderCacheAlt.ReturnAndFree(sb);
                 return GetLiteralCollection(isArray, collectionBody, collectionType ?? useType);
             }
+
             if (enumType != null)
                 return GetEnumLiteral(value, enumType);
             if (useType == nameof(String))
@@ -142,9 +145,14 @@ namespace Apps.ServiceInterface.Langs
         }
 
         public virtual string New(string ctor) => "new " + ctor;
+        public abstract string Value(string propType, string propValue);
+
+        public virtual string Float(string propValue) => propValue + (propValue.IndexOf('.') >= 0 ? "" : ".0");
 
         public virtual string ISO8601(string value) =>
-            value.ConvertTo<DateTime>().ToUniversalTime().ToString("u").Replace(' ', 'T'); //"O" generates unwanted fractions
+            value.ConvertTo<DateTime>().ToUniversalTime().ToString("u")
+                .Replace(' ', 'T'); //"O" generates unwanted fractions
+
         public virtual string XsdDuration(string value) => TimeSpanConverter.ToXsdDuration(value.ConvertTo<TimeSpan>());
         public virtual string UUID(string value) => value.ConvertTo<Guid>().ToString("D");
 
@@ -154,8 +162,10 @@ namespace Apps.ServiceInterface.Langs
             if (dateValue.Hour + dateValue.Minute + dateValue.Second + dateValue.Millisecond == 0)
                 return New($"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},DateTimeKind.Utc)");
             if (dateValue.Millisecond == 0)
-                return New($"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second},DateTimeKind.Utc)");
-            return New($"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second},{dateValue.Millisecond},DateTimeKind.Utc)");
+                return New(
+                    $"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second},DateTimeKind.Utc)");
+            return New(
+                $"DateTime({dateValue.Year},{dateValue.Month},{dateValue.Day},{dateValue.Hour},{dateValue.Minute},{dateValue.Second},{dateValue.Millisecond},DateTimeKind.Utc)");
         }
 
         public virtual string GetTimeSpanLiteral(string value)
@@ -189,12 +199,14 @@ namespace Apps.ServiceInterface.Langs
         {
             if (op?.Response != null)
             {
-                var genericArgs = op.Response.Name.IndexOf('`') >= 0 && op.Response.GenericArgs[0] == "'T" && op.DataModel != null
-                    ? new[] { op.DataModel.Name }
+                var genericArgs = op.Response.Name.IndexOf('`') >= 0 && op.Response.GenericArgs[0] == "'T" &&
+                                  op.DataModel != null
+                    ? new[] {op.DataModel.Name}
                     : op.Response.GenericArgs;
                 var typeName = GetTypeName(op.Response.Name, genericArgs);
                 return typeName;
             }
+
             return "var";
         }
 

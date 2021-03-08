@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ServiceStack;
 using ServiceStack.NativeTypes.CSharp;
@@ -50,6 +51,17 @@ var client = new JsonServiceClient(""{BASE_URL}"");{REQUIRES_AUTH}
         }
 
         private CSharpGenerator Gen => new(new MetadataTypesConfig());
+
+        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+            $"    {prop.Name} = {Value(prop.Type,propValue)},";
+
+        public override string Value(string propType, string propValue) => propType switch {
+            nameof(Double) => Float(propValue),
+            nameof(Single) => Float(propValue) + "f",
+            nameof(Decimal) => Float(propValue) + "m",
+            _ => propValue
+        };
+
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
     }
 }

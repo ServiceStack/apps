@@ -68,51 +68,29 @@ module Program =
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"            {prop.Name} = {propValue},";
+            $"            {Gen.GetPropertyName(prop.Name)} = {Value(prop.Type,propValue)},";
+
+        public override string Value(string propType, string propValue) => propType switch {
+            nameof(Int32) => propValue,
+            nameof(Double) => propValue + (propValue.IndexOf('.') >= 0 ? "" : ".0"),
+            nameof(Byte) => propValue + "uy",
+            nameof(SByte) => propValue + "y",
+            nameof(Int16) => propValue + "s",
+            nameof(Int64) => propValue + "L",
+            nameof(UInt16) => propValue + "us",
+            nameof(UInt32) => propValue + "ul",
+            nameof(UInt64) => propValue + "UL",
+            nameof(Single) => propValue + "f",
+            nameof(Decimal) => propValue + "m",
+            _ => propValue
+        };
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) =>
             isArray
                 ? $"[| " + collectionBody + " |]"
                 : collectionType.StartsWith("ResizeArray")
-                    ? $"ResizeArray([{ConvertCollectionBody(collectionBody,collectionType)}])"
-                    : $"new {collectionType}([{ConvertCollectionBody(collectionBody,collectionType)}])";
-
-        private static string ConvertCollectionBody(string collectionBody, string collectionType)
-        {
-            var elementType = collectionType.IndexOf('<') >= 0
-                ? collectionType.RightPart('<').LeftPart('>')
-                : null;
-            if (elementType == null || !elementType.IsNumericType())
-                return collectionBody;
-
-            var sb = StringBuilderCache.Allocate();
-            var nums = collectionBody.Split(';');
-            foreach (var num in nums)
-            {
-                if (sb.Length > 0)
-                    sb.Append("; ");
-                sb.Append(num.Trim());
-                sb.Append(NumericTypeLiteralSuffix(elementType));
-            }
-            var ret = StringBuilderCache.ReturnAndFree(sb);
-            return ret;
-        }
-
-        public static string NumericTypeLiteralSuffix(string numericType) =>
-            numericType switch {
-                nameof(Byte) => "uy",
-                nameof(SByte) => "y",
-                nameof(Int16) => "s",
-                nameof(Int32) => "",
-                nameof(Int64) => "L",
-                nameof(UInt16) => "us",
-                nameof(UInt32) => "ul",
-                nameof(UInt64) => "UL",
-                nameof(Single) => "f",
-                nameof(Double) => "",
-                nameof(Decimal) => "m",
-                _ => throw new ArgumentException("Unknown Numeric Type: " + numericType)
-            };
+                    ? $"ResizeArray([{collectionBody}])"
+                    : $"new {collectionType}([{collectionBody}])";
 
         public override string RequestBodyFilter(string assignments)
         {

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using ServiceStack;
 using ServiceStack.NativeTypes.Java;
-using ServiceStack.Text.Support;
 
 namespace Apps.ServiceInterface.Langs
 {
@@ -18,11 +16,7 @@ namespace Apps.ServiceInterface.Langs
             Files = new Dictionary<string, string> {
                 ["src\\main\\java\\myapp\\App.java"] = @"package myapp;
 
-import net.servicestack.client.JsonServiceClient;
-import net.servicestack.gistcafe.Inspect;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import net.servicestack.client.*;
 import java.util.Collections;
 
 import static myapp.dtos.*;
@@ -59,8 +53,7 @@ repositories {
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'net.servicestack:client:1.0.45'
-    implementation 'net.servicestack:gistcafe:0.0.7'
+    implementation 'net.servicestack:client:1.0.46'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
@@ -86,7 +79,34 @@ application {
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"            .set{prop.Name.ToPascalCase()}({propValue})";
+            $"            .set{Gen.GetPropertyName(prop.Name).ToPascalCase()}({Value(prop.Type, propValue)})";
+
+        /*
+            .setNullableId(2)
+            .setByte((short)3)
+            .setShort((short)4)
+            .setInt(5)
+            .setLong((long)6)
+            .setUShort(7)
+            .setUInt((long)8)
+            .setULong(java.math.BigInteger.valueOf(9))
+            .setFloat((float)10.0)
+            .setDouble(11.0)
+            .setDecimal(java.math.BigDecimal.valueOf(12))
+         */
+        public override string Value(string propType, string propValue) => propType switch {
+            nameof(Int32) => propValue,
+            nameof(Byte) => $"(short){propValue}",
+            nameof(SByte) => $"(short){propValue}",
+            nameof(Int16) => $"(short){propValue}",
+            nameof(UInt32) => $"(long){propValue}",
+            nameof(Int64) => $"(long){propValue}",
+            nameof(Double) => Float(propValue),
+            nameof(Single) => $"(float){Float(propValue)}",
+            nameof(UInt64) => $"java.math.BigInteger.valueOf({propValue})",
+            nameof(Decimal) => $"java.math.BigDecimal.valueOf({propValue})",
+            _ => propValue
+        };
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "Utils.asList(" + collectionBody + ")";

@@ -62,10 +62,19 @@ End Module
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"            .{Gen.EscapeKeyword(prop.Name)} = {propValue},";
+            $"            .{Gen.GetPropertyName(prop.Name)} = {Value(prop.Type,propValue)},";
+
+        public override string Value(string propType, string propValue) => propType switch {
+            nameof(Char) => $"\"{propValue}\"C",
+            nameof(Int64) => propValue + "L",
+            nameof(Double) => Float(propValue),
+            nameof(Single) => Float(propValue) + "F",
+            nameof(Decimal) => Float(propValue) + "D",
+            _ => propValue
+        };
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => isArray 
-            ? $"New {GetTypeName(collectionType, new string[0])}() {{" + collectionBody + "}"
+            ? "{" + collectionBody + "}"
             : $"New {collectionType}() From {{" + collectionBody + "}";
 
         public override string RequestBodyFilter(string assignments)
@@ -78,6 +87,6 @@ End Module
         }
 
         public override string New(string ctor) => "New " + ctor;
-        public override string GetCharLiteral(string value) => $"\"{value.ConvertTo<Char>()}\"C";
+        public override string GetCharLiteral(string value) => Value(nameof(Char), value);
     }
 }

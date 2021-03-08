@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using ServiceStack;
 using ServiceStack.NativeTypes.Swift;
-using ServiceStack.Text.Support;
 
 namespace Apps.ServiceInterface.Langs
 {
@@ -57,7 +55,14 @@ let client = JsonServiceClient(baseUrl: ""{BASE_URL}""){REQUIRES_AUTH}
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"request.{prop.Name.ToCamelCase()} = {propValue}";
+            $"request.{Gen.GetPropertyName(prop.Name)} = {Value(prop.Type, propValue)}";
+
+        public override string Value(string propType, string propValue) => propType switch {
+            nameof(Double) => Float(propValue),
+            nameof(Single) => Float(propValue),
+            nameof(Decimal) => Float(propValue),
+            _ => propValue
+        };
 
         public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
             "[" + collectionBody + "]";
