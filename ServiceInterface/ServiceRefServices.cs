@@ -122,9 +122,17 @@ namespace Apps.ServiceInterface
                         .Replace("{REQUIRES_AUTH}", authTemplate)
                         .Replace("{DESCRIPTION}",description)
                         .Replace("{INSPECT_VARS}", requestDto != null ? lang.InspectVarsResponse : null);
-                    content = args != null
-                        ? content.Replace("{REQUEST_BODY}", lang.RequestBody(requestDto, args, site.Metadata.Api))
-                        : content.Replace("{REQUEST_BODY}", "");
+
+                    var textCase = site.Metadata.App.JsTextCase != null
+                        ? (TextCase)Enum.Parse(typeof(TextCase), site.Metadata.App.JsTextCase, ignoreCase:true)
+                        : TextCase.CamelCase;
+                    using var jsScope = JsConfig.With(new Config { TextCase = textCase });
+                    {
+                        content = args != null
+                            ? content.Replace("{REQUEST_BODY}", lang.RequestBody(requestDto, args, site.Metadata.Api))
+                            : content.Replace("{REQUEST_BODY}", "");
+                    }
+
                     var file = new GistFile {
                         Filename = k,
                         Content = content,
