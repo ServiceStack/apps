@@ -57,14 +57,14 @@ let client = JsonServiceClient(baseUrl: ""{BASE_URL}""){REQUIRES_AUTH}
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"request.{Gen.GetPropertyName(prop.Name)} = {Value(prop.Type, propValue)}";
 
-        public override string Value(string propType, string propValue) => propType switch {
-            nameof(Double) => Float(propValue),
-            nameof(Single) => Float(propValue),
-            nameof(Decimal) => Float(propValue),
-            _ => propValue
+        public override string Value(string typeName, string value) => typeName switch {
+            nameof(Double) => Float(value),
+            nameof(Single) => Float(value),
+            nameof(Decimal) => Float(value),
+            _ => value
         };
 
-        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
+        public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
             "[" + collectionBody + "]";
 
         public override string New(string ctor) => ctor; //no new

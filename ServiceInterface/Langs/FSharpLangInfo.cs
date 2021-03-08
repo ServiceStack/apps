@@ -70,23 +70,23 @@ module Program =
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"            {Gen.GetPropertyName(prop.Name)} = {Value(prop.Type,propValue)},";
 
-        public override string Value(string propType, string propValue) => propType switch {
-            nameof(Int32) => propValue,
-            nameof(Double) => propValue + (propValue.IndexOf('.') >= 0 ? "" : ".0"),
-            nameof(Byte) => propValue + "uy",
-            nameof(SByte) => propValue + "y",
-            nameof(Int16) => propValue + "s",
-            nameof(Int64) => propValue + "L",
-            nameof(UInt16) => propValue + "us",
-            nameof(UInt32) => propValue + "ul",
-            nameof(UInt64) => propValue + "UL",
-            nameof(Single) => propValue + "f",
-            nameof(Decimal) => propValue + "m",
-            _ => propValue
+        public override string Value(string typeName, string value) => typeName switch {
+            nameof(Int32) => value,
+            nameof(Double) => value + (value.IndexOf('.') >= 0 ? "" : ".0"),
+            nameof(Byte) => value + "uy",
+            nameof(SByte) => value + "y",
+            nameof(Int16) => value + "s",
+            nameof(Int64) => value + "L",
+            nameof(UInt16) => value + "us",
+            nameof(UInt32) => value + "ul",
+            nameof(UInt64) => value + "UL",
+            nameof(Single) => value + "f",
+            nameof(Decimal) => value + "m",
+            _ => value
         };
 
-        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) =>
-            isArray
+        public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
+            IsArray(collectionType)
                 ? $"[| " + collectionBody + " |]"
                 : collectionType.StartsWith("ResizeArray")
                     ? $"ResizeArray([{collectionBody}])"

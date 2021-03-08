@@ -72,15 +72,17 @@ let client = new JsonServiceClient('{BASE_URL}');
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"        {Gen.GetPropertyName(prop.Name)}: {Value(prop.Type,propValue)},";
 
-        public override string Value(string propType, string propValue) => propType switch {
-            nameof(Double) => Float(propValue),
-            nameof(Single) => Float(propValue),
-            nameof(Decimal) => Float(propValue),
-            _ => propValue
+        public override string Value(string typeName, string value) => typeName switch {
+            nameof(Double) => Float(value),
+            nameof(Single) => Float(value),
+            nameof(Decimal) => Float(value),
+            _ => value
         };
 
-        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
-            "[" + collectionBody + "]";
+        public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
+            IsArray(collectionType) && elementType == nameof(Byte)
+                ? "new Uint8Array([" + collectionBody + "])"
+                : "[" + collectionBody + "]";
 
         // public override string GetDateTimeLiteral(string value) => New($"Date('{ISO8601(value)}')");
         public override string GetDateTimeLiteral(string value) => $"\"{ISO8601(value)}\"";

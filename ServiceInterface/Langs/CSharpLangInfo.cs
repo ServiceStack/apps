@@ -55,11 +55,11 @@ var client = new JsonServiceClient(""{BASE_URL}"");{REQUIRES_AUTH}
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"    {prop.Name} = {Value(prop.Type,propValue)},";
 
-        public override string Value(string propType, string propValue) => propType switch {
-            nameof(Double) => Float(propValue),
-            nameof(Single) => Float(propValue) + "f",
-            nameof(Decimal) => Float(propValue) + "m",
-            _ => propValue
+        public override string Value(string typeName, string value) => typeName switch {
+            nameof(Double) => Float(value),
+            nameof(Single) => Float(value) + "f",
+            nameof(Decimal) => Float(value) + "m",
+            _ => value
         };
 
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);

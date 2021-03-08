@@ -57,7 +57,7 @@ tasks.test {
 dependencies {
     implementation(kotlin(""stdlib""))
     implementation(""com.google.code.gson:gson:2.8.6"")
-    implementation(""net.servicestack:client:1.0.46"")
+    implementation(""net.servicestack:client:1.0.47"")
     testImplementation(platform(""org.junit:junit-bom:5.7.0""))
     testImplementation(""org.junit.jupiter:junit-jupiter"")
 }
@@ -82,17 +82,20 @@ dependencies {
         Double = 11.0
         decimal = 12.toBigDecimal()
          */
-        public override string Value(string propType, string propValue) => propType switch {
-            nameof(Int32) => propValue,
-            nameof(Double) => Float(propValue),
-            nameof(UInt64) => $"{propValue}.toBigInteger()",
-            nameof(Single) => $"{Float(propValue)}.toFloat()",
-            nameof(Decimal) => $"{propValue}.toBigDecimal()",
-            _ => propValue
+        public override string Value(string typeName, string value) => typeName switch {
+            nameof(Int32) => value,
+            nameof(Double) => Float(value),
+            nameof(UInt64) => $"{value}.toBigInteger()",
+            nameof(Single) => $"{Float(value)}.toFloat()",
+            nameof(Decimal) => $"{value}.toBigDecimal()",
+            _ => value
         };
 
-        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
+        public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
             "arrayListOf(" + collectionBody + ")";
+
+        public override string GetByteArrayLiteral(byte[] bytes) =>
+            $"java.util.Base64.getDecoder().decode(\"{Convert.ToBase64String(bytes)}\")";
 
         public override string New(string ctor) => ctor; //no new
         public override string GetDateTimeLiteral(string value) => $"DateTime.parse(\"{ISO8601(value)}\")";

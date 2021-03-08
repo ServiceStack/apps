@@ -53,7 +53,7 @@ repositories {
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'net.servicestack:client:1.0.46'
+    implementation 'net.servicestack:client:1.0.47'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
@@ -94,22 +94,24 @@ application {
             .setDouble(11.0)
             .setDecimal(java.math.BigDecimal.valueOf(12))
          */
-        public override string Value(string propType, string propValue) => propType switch {
-            nameof(Int32) => propValue,
-            nameof(Byte) => $"(short){propValue}",
-            nameof(SByte) => $"(short){propValue}",
-            nameof(Int16) => $"(short){propValue}",
-            nameof(UInt32) => $"(long){propValue}",
-            nameof(Int64) => $"(long){propValue}",
-            nameof(Double) => Float(propValue),
-            nameof(Single) => $"(float){Float(propValue)}",
-            nameof(UInt64) => $"java.math.BigInteger.valueOf({propValue})",
-            nameof(Decimal) => $"java.math.BigDecimal.valueOf({propValue})",
-            _ => propValue
+        public override string Value(string typeName, string value) => typeName switch {
+            nameof(Int32) => value,
+            nameof(Byte) => $"(short){value}",
+            nameof(SByte) => $"(short){value}",
+            nameof(Int16) => $"(short){value}",
+            nameof(UInt32) => $"(long){value}",
+            nameof(Int64) => $"(long){value}",
+            nameof(Double) => Float(value),
+            nameof(Single) => $"(float){Float(value)}",
+            nameof(UInt64) => $"java.math.BigInteger.valueOf({value})",
+            nameof(Decimal) => $"java.math.BigDecimal.valueOf({value})",
+            _ => value
         };
 
-        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
+        public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
             "Utils.asList(" + collectionBody + ")";
+        public override string GetByteArrayLiteral(byte[] bytes) =>
+            $"ByteArray.parse(\"{Convert.ToBase64String(bytes)}\")";
 
         public override string GetDateTimeLiteral(string value) => $"DateTime.parse(\"{ISO8601(value)}\")";
         public override string GetTimeSpanLiteral(string value) => $"TimeSpan.parse(\"{XsdDuration(value)}\")";

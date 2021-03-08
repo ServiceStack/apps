@@ -16,8 +16,9 @@ namespace Apps.ServiceInterface.Langs
             DtosPathPrefix = "lib\\";
             Files = new Dictionary<string, string> {
                 ["bin\\my_app.dart"] = @"import 'dart:io';
+import 'dart:typed_data';
 import 'package:servicestack/client.dart';
-import 'package:gistcafe/gistcafe.dart';
+import 'package:servicestack/inspect.dart';
 
 import '../lib/dtos.dart';
 
@@ -37,9 +38,7 @@ environment:
   sdk: '>=2.8.1 <3.0.0'
 
 dependencies:
-  http: ^0.12.2
-  gistcafe: ^1.0.3
-  servicestack: ^1.0.25
+  servicestack: ^1.0.26
 
 dev_dependencies:
 #  pedantic: ^1.9.0",
@@ -59,15 +58,17 @@ dev_dependencies:
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"    ..{Gen.GetPropertyName(prop.Name)} = {propValue}";
 
-        public override string Value(string propType, string propValue) => propType switch {
-            nameof(Double) => Float(propValue),
-            nameof(Single) => Float(propValue),
-            nameof(Decimal) => Float(propValue),
-            _ => propValue
+        public override string Value(string typeName, string value) => typeName switch {
+            nameof(Double) => Float(value),
+            nameof(Single) => Float(value),
+            nameof(Decimal) => Float(value),
+            _ => value
         };
 
-        public override string GetLiteralCollection(bool isArray, string collectionBody, string collectionType) => 
-            "[" + collectionBody + "]";
+        public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
+            IsArray(collectionType) && elementType == nameof(Byte)
+                ? "Uint8List.fromList([" + collectionBody + "])"
+                : "[" + collectionBody + "]";
 
         public override string New(string ctor) => ctor; //no new
         public override string GetDateTimeLiteral(string value)

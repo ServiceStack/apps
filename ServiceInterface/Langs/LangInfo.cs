@@ -78,9 +78,22 @@ namespace Apps.ServiceInterface.Langs
                 if (collectionType.IndexOf("Dictionary", StringComparison.Ordinal) >= 0)
                     return null; //not supported
             }
-
-            if (isArray || collectionType != null)
+            else if (isArray)
             {
+                collectionType = useType;
+            }
+
+            if (collectionType != null)
+            {
+                if (collectionType == "Byte[]")
+                {
+                    var intList = value.IndexOf(',') >= 0 || byte.TryParse(value, out _);
+                    var bytes = intList 
+                        ? value.FromJsv<byte[]>() 
+                        : Convert.FromBase64String(value);
+                    return GetByteArrayLiteral(bytes);
+                }
+                
                 var items = value.FromJsv<List<string>>();
                 var sb = StringBuilderCacheAlt.Allocate();
                 foreach (var item in items)
@@ -99,7 +112,7 @@ namespace Apps.ServiceInterface.Langs
                 }
 
                 var collectionBody = StringBuilderCacheAlt.ReturnAndFree(sb);
-                return GetLiteralCollection(isArray, collectionBody, collectionType ?? useType);
+                return GetCollectionLiteral(collectionBody, collectionType, elementType);
             }
 
             if (enumType != null)
@@ -145,7 +158,7 @@ namespace Apps.ServiceInterface.Langs
         }
 
         public virtual string New(string ctor) => "new " + ctor;
-        public abstract string Value(string propType, string propValue);
+        public abstract string Value(string typeName, string value);
 
         public virtual string Float(string propValue) => propValue + (propValue.IndexOf('.') >= 0 ? "" : ".0");
 
@@ -155,6 +168,23 @@ namespace Apps.ServiceInterface.Langs
 
         public virtual string XsdDuration(string value) => TimeSpanConverter.ToXsdDuration(value.ConvertTo<TimeSpan>());
         public virtual string UUID(string value) => value.ConvertTo<Guid>().ToString("D");
+        
+        public abstract string GetTypeName(string typeName, string[] genericArgs);
+
+        public virtual string GetResponse(MetadataOperationType op)
+        {
+            if (op?.Response != null)
+            {
+                var genericArgs = op.Response.Name.IndexOf('`') >= 0 && op.Response.GenericArgs[0] == "'T" &&
+                                  op.DataModel != null
+                    ? new[] {op.DataModel.Name}
+                    : op.Response.GenericArgs;
+                var typeName = GetTypeName(op.Response.Name, genericArgs);
+                return typeName;
+            }
+
+            return "var";
+        }
 
         public virtual string GetDateTimeLiteral(string value)
         {
@@ -186,28 +216,17 @@ namespace Apps.ServiceInterface.Langs
             return to;
         }
 
-        public virtual string GetLiteralCollection(bool isArray, string collectionBody, string collectionType)
-        {
-            return isArray
+        public bool IsArray(string collectionType) => collectionType.EndsWith("[]");
+
+        public virtual string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
+            IsArray(collectionType)
                 ? "new[] { " + collectionBody + " }"
                 : "new " + collectionType + " { " + collectionBody + " }";
-        }
 
-        public abstract string GetTypeName(string typeName, string[] genericArgs);
-
-        public virtual string GetResponse(MetadataOperationType op)
+        public virtual string GetByteArrayLiteral(byte[] bytes)
         {
-            if (op?.Response != null)
-            {
-                var genericArgs = op.Response.Name.IndexOf('`') >= 0 && op.Response.GenericArgs[0] == "'T" &&
-                                  op.DataModel != null
-                    ? new[] {op.DataModel.Name}
-                    : op.Response.GenericArgs;
-                var typeName = GetTypeName(op.Response.Name, genericArgs);
-                return typeName;
-            }
-
-            return "var";
+            var collectionBody = string.Join(ItemsSep, bytes.Map(x => x.ToString()));
+            return GetCollectionLiteral(collectionBody, "Byte[]", "Byte");
         }
 
         public virtual string GetCharLiteral(string value) => $"'{value.ConvertTo<Char>()}'";
