@@ -27,8 +27,7 @@ namespace Apps.ServiceInterface.Langs
   ""author"": """",
   ""license"": ""ISC"",
   ""dependencies"": {
-    ""@servicestack/client"": ""^1.0.39"",
-    ""gistcafe"": ""^1.0.1""
+    ""@servicestack/client"": ""^1.0.47""
   },
   ""devDependencies"": {
     ""ts-node"": ""^9.1.1"",
@@ -41,8 +40,7 @@ namespace Apps.ServiceInterface.Langs
         ""lib"": [""ES2015"",""DOM""]
     }
 }",
-                ["index.ts"] = @"import { JsonServiceClient } from '@servicestack/client';
-import { Inspect } from 'gistcafe';
+                ["index.ts"] = @"import { JsonServiceClient, Inspect } from '@servicestack/client';
 {API_COMMENT}import { {REQUEST} } from './dtos';
 
 let client = new JsonServiceClient('{BASE_URL}');
@@ -80,9 +78,8 @@ let client = new JsonServiceClient('{BASE_URL}');
         };
 
         public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
-            IsArray(collectionType) && elementType == nameof(Byte)
-                ? "new Uint8Array([" + collectionBody + "])"
-                : "[" + collectionBody + "]";
+            "[" + collectionBody + "]";
+        public override string GetByteArrayLiteral(byte[] bytes) => $"\"{Convert.ToBase64String(bytes)}\"";
 
         // public override string GetDateTimeLiteral(string value) => New($"Date('{ISO8601(value)}')");
         public override string GetDateTimeLiteral(string value) => $"\"{ISO8601(value)}\"";

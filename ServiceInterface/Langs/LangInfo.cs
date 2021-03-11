@@ -223,11 +223,8 @@ namespace Apps.ServiceInterface.Langs
                 ? "new[] { " + collectionBody + " }"
                 : "new " + collectionType + " { " + collectionBody + " }";
 
-        public virtual string GetByteArrayLiteral(byte[] bytes)
-        {
-            var collectionBody = string.Join(ItemsSep, bytes.Map(x => x.ToString()));
-            return GetCollectionLiteral(collectionBody, "Byte[]", "Byte");
-        }
+        public virtual string GetByteArrayLiteral(byte[] bytes) =>
+            $"Convert.FromBase64String(\"{Convert.ToBase64String(bytes)}\")";
 
         public virtual string GetCharLiteral(string value) => $"'{value.ConvertTo<Char>()}'";
         public virtual string GetGuidLiteral(string value) => New($"Guid(\"{value.ConvertTo<Guid>():D}\")");

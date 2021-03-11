@@ -57,7 +57,7 @@ tasks.test {
 dependencies {
     implementation(kotlin(""stdlib""))
     implementation(""com.google.code.gson:gson:2.8.6"")
-    implementation(""net.servicestack:client:1.0.47"")
+    implementation(""net.servicestack:client:1.0.49"")
     testImplementation(platform(""org.junit:junit-bom:5.7.0""))
     testImplementation(""org.junit.jupiter:junit-jupiter"")
 }
@@ -73,7 +73,7 @@ dependencies {
         }
         private KotlinGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
-
+        public override string New(string ctor) => ctor; //no new
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"        {Gen.GetPropertyName(prop.Name)} = {Value(prop.Type, propValue)}";
         /*
@@ -93,14 +93,10 @@ dependencies {
 
         public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
             "arrayListOf(" + collectionBody + ")";
-
-        public override string GetByteArrayLiteral(byte[] bytes) =>
-            $"java.util.Base64.getDecoder().decode(\"{Convert.ToBase64String(bytes)}\")";
-
-        public override string New(string ctor) => ctor; //no new
-        public override string GetDateTimeLiteral(string value) => $"DateTime.parse(\"{ISO8601(value)}\")";
-        public override string GetTimeSpanLiteral(string value) => $"TimeSpan.parse(\"{XsdDuration(value)}\")";
-        public override string GetGuidLiteral(string value) => $"Guid.parse(\"{value.ConvertTo<Guid>():D}\")";
+        public override string GetByteArrayLiteral(byte[] bytes) => $"Utils.fromByteArray(\"{Convert.ToBase64String(bytes)}\")";
+        public override string GetDateTimeLiteral(string value) => $"Utils.fromDateTime(\"{ISO8601(value)}\")";
+        public override string GetTimeSpanLiteral(string value) => $"Utils.fromTimeSpan(\"{XsdDuration(value)}\")";
+        public override string GetGuidLiteral(string value) => $"Utils.fromGuid(\"{value.ConvertTo<Guid>():D}\")";
         public override string GetCharLiteral(string value) => $"\"{value.ConvertTo<char>()}\"";
     }
 }

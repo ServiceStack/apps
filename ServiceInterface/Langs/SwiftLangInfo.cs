@@ -14,7 +14,8 @@ namespace Apps.ServiceInterface.Langs
             Ext = "swift";
             DtosPathPrefix = "Sources\\MyApp\\";
             Files = new Dictionary<string, string> {
-                ["Package.swift"] = @"import PackageDescription
+                ["Package.swift"] = @"// swift-tools-version:5.3
+import PackageDescription
 
 let package = Package(
     name: ""MyApp"",
@@ -29,17 +30,19 @@ let package = Package(
     ]
 )
 ",
-                ["Sources\\MyApp\\main.swift"] = @"import Foundation
+                ["Sources\\MyApp\\main.swift"] = @"#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
+import Foundation
 import ServiceStack
 
 let client = JsonServiceClient(baseUrl: ""{BASE_URL}""){REQUIRES_AUTH}
 
 {API_COMMENT}let request = {REQUEST}(){REQUEST_BODY}
-{API_COMMENT}client.sendAsync(request)
-    {API_COMMENT}.done { response in 
-        {API_COMMENT}Inspect.printDump(response)
-        {INSPECT_VARS}
-    {API_COMMENT}}
+{API_COMMENT}let response = try client.send(request)
+
+{API_COMMENT}Inspect.printDump(response)
+{INSPECT_VARS}
 ",
             };
             InspectVarsResponse = @"Inspect.vars([""response"":response])";
@@ -53,6 +56,7 @@ let client = JsonServiceClient(baseUrl: ""{BASE_URL}""){REQUIRES_AUTH}
         }
         private SwiftGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+        public override string New(string ctor) => ctor; //no new
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"request.{Gen.GetPropertyName(prop.Name)} = {Value(prop.Type, propValue)}";
@@ -66,11 +70,12 @@ let client = JsonServiceClient(baseUrl: ""{BASE_URL}""){REQUIRES_AUTH}
 
         public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
             "[" + collectionBody + "]";
+        public override string GetByteArrayLiteral(byte[] bytes) =>
+            $"fromByteArray(\"{Convert.ToBase64String(bytes)}\")";
 
-        public override string New(string ctor) => ctor; //no new
-        public override string GetDateTimeLiteral(string value) => $"DateTime.parse(\"{ISO8601(value)}\")";
+        public override string GetDateTimeLiteral(string value) => $"fromDateTime(\"{ISO8601(value)}\")";
         public override string GetGuidLiteral(string value) => $"\"{UUID(value)}\"";
-        public override string GetTimeSpanLiteral(string value) => $"TimeSpan.parse(\"{XsdDuration(value)}\")";
+        public override string GetTimeSpanLiteral(string value) => $"fromTimeSpan(\"{XsdDuration(value)}\")";
         public override string GetCharLiteral(string value) => $"\"{value.ConvertTo<char>()}\"";
     }
 }

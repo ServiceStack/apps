@@ -54,6 +54,7 @@ dev_dependencies:
         
         private DartGenerator Gen => new(new MetadataTypesConfig());
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+        public override string New(string ctor) => ctor; //no new
 
         public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
             $"    ..{Gen.GetPropertyName(prop.Name)} = {propValue}";
@@ -66,11 +67,10 @@ dev_dependencies:
         };
 
         public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
-            IsArray(collectionType) && elementType == nameof(Byte)
-                ? "Uint8List.fromList([" + collectionBody + "])"
-                : "[" + collectionBody + "]";
-
-        public override string New(string ctor) => ctor; //no new
+            "[" + collectionBody + "]";
+        public override string GetByteArrayLiteral(byte[] bytes) =>
+            $"fromByteArray(\"{Convert.ToBase64String(bytes)}\")";
+        
         public override string GetDateTimeLiteral(string value)
         {
             var dateValue = value.ConvertTo<DateTime>().ToUniversalTime();

@@ -66,7 +66,7 @@ INPUT.text-3xl { line-height: 2.5rem }
 </style>
 
 <script>let exports = { __esModule:true }, module = { exports:exports }; function require(name) { return exports[name] || window[name] }</script>
-<script defer src="https://unpkg.com/@servicestack/client@1.0.45/dist/servicestack-client.min.js"></script>
+<script defer src="https://unpkg.com/@servicestack/client@1.0.47/dist/servicestack-client.min.js"></script>
 <script defer src="dtos.js"></script>
 </head>
 <body class="m-0 font-sans bg-gray-50 nourl">
@@ -613,7 +613,7 @@ function trimPrefixes(str,c) {
 let NumericTypes = ['Byte','SByte','Int16','Int32','Int64','UInt16','UInt32','UInt64','Single','Double','Decimal'];
 function isNumeric(type) { return NumericTypes.indexOf(type) >= 0; }
 
-let BuiltInTypes = ['String','Boolean','DateTime','TimeSpan','Char','Guid'].concat(NumericTypes);
+let BuiltInTypes = ['String','Boolean','DateTime','DateTimeOffset','TimeSpan','Char','Guid'].concat(NumericTypes);
 let IgnoreTypes = ['KeyValuePair`2'];
 
 function typeInfo(meta,prop) {
@@ -659,7 +659,9 @@ function typeInfo(meta,prop) {
         isBuiltIn: elementType || BuiltInTypes.indexOf(type) >= 0,
     };
     info.isClass = metaType != null || (!info.isNumeric && !BuiltInTypes.indexOf(type));
-    info.ignore = IgnoreTypes.indexOf(type) >= 0 || info.isDictionary || (BuiltInTypes.indexOf(type) === -1 && !info.elementType);
+    info.ignore = (IgnoreTypes.indexOf(type) >= 0 || info.isDictionary || BuiltInTypes.indexOf(type) === -1)
+        && !(info.elementType != null && BuiltInTypes.indexOf(info.elementType) >= 0);
+    
     if (LOG) console.log(`typeInfo(${prop.type})`, info);
     return info;
 }
