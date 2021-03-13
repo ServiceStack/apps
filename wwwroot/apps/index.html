@@ -89,7 +89,7 @@ INPUT.text-3xl { line-height: 2.5rem }
         </div>
         <div class="btn-help hide-enabled absolute text-right w-section">
             <a  href="https://docs.servicestack.net/create-your-first-webservice"
-                title="Create APIs" class="float-right w-6 text-2xl text-gray-500 cursor-pointer" style="margin:-2.85rem 1rem 0 0">&quest;</a>
+                title="Create ServiceStack APIs" class="float-right w-6 text-2xl text-gray-500 cursor-pointer" style="margin:-2.85rem 1rem 0 0">&quest;</a>
         </div>
 
         <div class="text-center">
@@ -257,27 +257,45 @@ let LOG = location.search.indexOf('log=1') >= 0 || true;
 let client = null;
 let LANGS = ['csharp','typescript','dart','java','kotlin','swift','vbnet','fsharp'];
 let M = {
+    EVENTS: {
+        UrlChange: 'url:change',
+        MetaLoad: 'meta:load',
+        OpChange: 'op:change',
+        TagChange: 'tag:change',
+        LangChange: 'lang:change',
+        IFrameLoad: 'iframe:load',
+    },
+    ON:{},
+    SITES: {},
+    state:null,
     baseUrl: '',
+    slug:'',
     scheme: 'https',
     requiresAuth: false,
-    isEnabled: false,
     lang: '',
+    meta: null,
+    tag: '',
     op: null,
+    args: null,
     include:'',
     errorStatus:null,
-    setBaseUrl(baseUrl) {
-        this.baseUrl = baseUrl;
+    setUrl(scheme, baseUrl) {
+        if (scheme === this.scheme && baseUrl === this.baseUrl) return;
+
+        this.scheme = scheme || 'https';
+        this.baseUrl = baseUrl || '';
         if (this.baseUrl.indexOf('://') >= 0) {
             this.scheme = leftPart(this.baseUrl,'://');
             this.baseUrl = rightPart(this.baseUrl,'://');
         }
+        this.slug = this.baseUrl ? urlToSlug(this.baseUrl) : null;
+        this.reset();
+        this.loadSiteMeta();
         this.syncClasses();
+        this.updateHash();
+        this.trigger(this.EVENTS.UrlChange);
+        this.trigger(this.EVENTS.LangChange);
         return this.baseUrl;
-    },
-    setScheme(value) {
-      this.scheme = value;
-      this.syncClasses();
-      return this.scheme;
     },
     setInclude(id) {
         localStorage.setItem('include:active',this.include=id);
@@ -292,7 +310,8 @@ let M = {
             return;
         }
         localStorage.setItem('lang:active',this.lang=lang);
-        activateLang();
+        this.trigger(this.EVENTS.LangChange);
+        this.updateHash();
         this.syncClasses();
     },
     getLang() {
@@ -302,18 +321,120 @@ let M = {
         this.errorStatus = status;
         this.syncClasses();
     },
-    slug() {
-        return this.baseUrl ? urlToSlug(this.baseUrl) : null;
+    getOpName() {
+      return this.op && this.op.request.name;  
+    },
+    assertMeta(method) {
+        if (!this.meta) {
+            if (LOG) console.log(`${method} assertMeta(): failed`);
+            return null;
+        }
+        return this.meta;
+    },
+    assertOp(method) {
+        let opName = this.getOpName();
+        if (!this.slug || !opName) {
+            if (LOG) console.log(`${method} assertOp(): Invalid state: slug:${this.slug}, op:${opName}`);
+            return null;
+        }
+        return opName;
+    },
+    getFormState() {
+        let opName = this.assertOp('getFormState');
+        if (!opName) return;
+        let opsState = this.SITES[this.slug] && this.SITES[this.slug].ops && this.SITES[this.slug].ops[this.op.request.name];
+        return opsState && opsState.formState || this.getOpCache('formState');
+    },
+    getOpCacheKey(type) { return `${this.slug}::${this.getOpName()}::${type}`; },
+    setOpCache(type,value) {
+        localStorage.setItem(this.getOpCacheKey(type), JSON.stringify(value));
+    },
+    getOpCache(type,value) {
+        let cacheKey = this.getOpCacheKey(type);
+        let json = localStorage.getItem(cacheKey);
+        try {
+            return json ? JSON.parse(json) : null;
+        } catch (e) {
+            if (LOG) console.log(`ERROR getOpCache(): ${cacheKey}, removing...`, json);
+            localStorage.removeItem(cacheKey);
+        }
+    },
+    setFormState(obj,cache) {
+        let opName = this.assertOp('setFormState');
+        if (!opName) return;
+        let ops = this.SITES[this.slug].ops || (this.SITES[this.slug].ops = {});
+        let opState = ops[opName] || (ops[opName]={});
+        opState.formState = obj;
+        if (LOG) console.log(`setFormState(): cache:${!!cache}`, obj);
+        if (cache) this.setOpCache('formState', obj);
+        this.updateHash();
+    },
+    setHashState(state) {
+        if (LOG) console.log(`setHashState():`, state);
+        M.setUrl(state.scheme, state.baseUrl);
+        if (state.lang) this.setLang(state.lang);
+        this.state = state;
+        this.restoreFromStateIfExists();
+    },
+    restoreFromStateIfExists() {
+        if (!this.meta || !this.state || !$('#iframe')) return;
+        let state = this.state;
+        this.state = null;
+        if (LOG) console.log(`restoreFromStateIfExists(): tag:${state.tag}, op:${state.op}`, state);
+        if (state.tag)
+            this.selectTag(state.tag);
+        if (state.op)
+            this.selectOp(state.op);
+        if (state.args)
+            this.setFormState(state.args);
+    },
+    loadSiteMeta() {
+        if (!this.slug) {
+            if (LOG) console.log(`loadSiteMeta(): ignoring: ${this.slug}`);
+            return;
+        }
+        this.meta = this.SITES[this.slug];
+        if (!this.SITES[this.slug]) {
+            client.get(new SiteMeta({ slug:this.slug }))
+                .then(r => {
+                    this.meta = this.SITES[this.slug] = r.api;
+                    this.trigger(M.EVENTS.MetaLoad);
+                    this.restoreFromStateIfExists();
+                });
+        }
+    },
+    getOperationNames() {
+        if (!this.assertMeta('getOperationNames')) return;
+        return this.tag
+            ? this.meta.operations.filter(x => x.tags && x.tags.indexOf(this.tag) >= 0).map(op => op.request.name)
+            : this.meta.operations.map(op => op.request.name);
+    },
+    getUniqueTags() {
+        if (!this.assertMeta('getUniqueTags')) return;
+        return uniq(flatMap(x => x.tags, this.meta.operations.filter(x => x.tags)));        
+    },
+    selectOp(opName) {
+        if (opName) {
+            this.op = this.meta.operations.find(x => x.request.name === opName);
+        } else {
+            this.op = null;
+        }
+        this.syncClasses();
+        this.updateHash();
+        this.trigger(this.EVENTS.OpChange);
+        return opName || '';
+    },
+    selectTag(tag) {
+        if (LOG) console.log(`selectTag(): ${tag}`);
+        M.selectOp(null);
+        M.tag = tag;
+        this.trigger(this.EVENTS.TagChange);
     },
     reset() {
-        $('#baseUrl').value = $('#txtRequest').value = $('#apiForm').innerHTML = this.baseUrl = '';
-        this.requiresAuth = this.isEnabled = false;
-        this.errorStatus = this.op = null;
-        clearErrorSummary();
-        updateDownload();
-        activateLang();
-        onUrlChange();
-        this.syncClasses();
+        if (LOG) console.log(`reset(): ${this.slug}`);
+        this.tag = '';
+        this.requiresAuth = false;
+        this.errorStatus = this.meta = this.op = this.args = null;
     },
     syncClasses() {
         let cls = ['m-0 font-sans bg-gray-50'];
@@ -328,13 +449,66 @@ let M = {
         if (this.errorStatus) {
             cls.push('has-error');
         }
-        if (this.requiresAuth) {
+        if (this.op && this.op.requiresAuth) {
             cls.push('requires-auth');
         }
         document.body.className = cls.join(' ');
+    },
+    getIFrameSrc() {
+        let opName = this.assertOp('setFormState');
+        if (!opName) return;
+        let url = combinePaths(location.origin,'gists',M.slug,M.lang,opName);
+        let formState = this.getFormState();
+        if (formState) {
+            let args = getArgs(formState, this.op.request, M.meta);
+            url += args;
+        }
+        let iframeSrc = gistUrl(url);
+        if (LOG) console.log('iframeSrc',iframeSrc);
+        return iframeSrc;
+    },
+    clearHash() {
+        history.pushState("", document.title, window.location.pathname + window.location.search);
+    },
+    getHashState() {
+        if (!this.lang) {
+            return { title: this.slug, url: '#' + this.slug }
+        }
+        let hash = `#${this.slug}/${this.lang}`;
+        let opName = this.getOpName();
+        let formState = this.getFormState();
+        if (opName && formState) {
+            let args = getArgs(formState, this.op.request, this.meta);
+            let tag = M.tag ? M.tag + '/' : '';
+            let hashUrl = hash + '/' + tag + opName + args;
+            return { title: `${this.slug} ${this.lang} ${opName}`, url: hashUrl };
+        }
+        return { title: `${this.slug} ${this.lang}`, url: hash };
+    },
+    updateHash() {
+        if (!M.baseUrl) {
+            this.clearHash();
+        } else {
+            let hashState = this.getHashState(); 
+            if (location.hash !== hashState.url) {
+                if (LOG) console.log(`Updating modified hashState: ${location.hash} != ${hashState.url}`);
+                history.pushState(hashState.data || null, hashState.title, hashState.url);
+            } else if (LOG) console.log(`Ignoring updating existing hash: ${location.hash}`);
+        }
+    },
+    on(evt, cb) {
+        let evtHandlers = this.ON[evt] || (this.ON[evt] = []);
+        evtHandlers.push(cb);
+        if (LOG) console.log(`registered new ${evt} handler, total: ${evtHandlers.length}`);
+    },
+    trigger(evt) {
+        let handlers = this.ON[evt];
+        if (handlers) {
+            if (LOG) console.log(`Firing ${handlers.length} ${evt} event handlers...`);
+            handlers.forEach(fn => fn());
+        }
     }
 };
-
 
 function $(sel, el) {
     return typeof sel === "string" ? (el || document).querySelector(sel) : sel || null;
@@ -423,10 +597,10 @@ function unSlash(urlComponent) {
     return urlComponent.replace(/:/g, '/');
 }
 
-function handleHash(path) {
-    if (!path) return;
-    if (path.indexOf('[') >= 0)
-        throw new Error(`Invalid path: ${path}`);
+function parsePath(path) {
+    let argString = path.indexOf('(') >= 0 ? '{' + decodeURIComponent(lastRightPart(path.substring(0,path.length-1),'(')) + '}' : null;
+    if (argString) path = lastLeftPart(path,'(');
+    let args = argString ? toStringValues(jsvParse(argString)) : null;
     let segments = path.split('/');
     let url = urlFromSlug(segments[0]);
     let parts = url.split('://');
@@ -434,63 +608,74 @@ function handleHash(path) {
     let baseUrl = !hasScheme
         ? parts[0]
         : parts[1];
-    if (hasScheme) {
-        let scheme = parts[0];
-        if (scheme !== 'http' && scheme !== 'https') {
-            return urlError({ message:'Invalid Scheme', field:'#scheme' });
-        } else {
-            M.setScheme(scheme);
-        }
+    let scheme = hasScheme ? parts[0] : this.scheme;
+    if (scheme !== 'http' && scheme !== 'https') {
+        return urlError({ message:'Invalid Scheme', field:'#scheme' });
     }
-    M.setBaseUrl(baseUrl);
-    $('#baseUrl').value = M.baseUrl;
-    $('#scheme').value = M.scheme;
-    if (segments.length > 1) {
-        let lang = segments[1];
-        M.setLang(lang);
-    }
-    onUrlChange();
+    let lang = segments.length > 1 ? segments[1] : null;
+    let op = segments.length === 4
+        ? segments[3]
+        : segments.length === 3
+            ? segments[2]
+            : null;
+    let tag = segments.length === 4 ? segments[2] : null;
+    return  { scheme:scheme, baseUrl:baseUrl, lang:lang, tag:tag, op:op, argString:argString, args:args, segments:segments };
 }
 
-function clearHash() {
-    history.pushState("", document.title, window.location.pathname + window.location.search);
+function toStringValues(obj) {
+    if (!obj) return null;
+    let to = {};
+    Object.keys(obj).forEach(k => {
+       let val = obj[k];
+       if (!val) return;
+       if (Array.isArray(val)) {
+           let sb = new StringBuffer();
+           val.forEach(x => {
+               if (sb.getLength() > 0)
+                   sb.append(',');
+               sb.append(x);
+           });
+           to[k] = sb.toString();
+       } else if (typeof val === "object") {
+           to[k] = JSON.stringify(val);
+       } else {
+           to[k] = `${val}`;
+       }
+    });
+    return to;
 }
-function updateHash() {
-    if (!M.baseUrl) {
-        clearHash();
-    } else {
-        let activeLang = $('.lang.active');
-        let url = M.baseUrl;
-        if (url.indexOf('://') === -1)
-            url = M.scheme + '://' + url;
-        let slug = urlToSlug(url);
-        location.hash = activeLang
-            ? `${slug}/${activeLang.getAttribute('data-lang')}` 
-            : slug;
-    }
+
+function handleHash(path) {
+    if (!path) return;
+    let r = parsePath(path);
+    M.setHashState(r);
+    $('#baseUrl').value = M.baseUrl;
+    $('#scheme').value = M.scheme;
 }
 
 function activateLang() {
+    let lang = M.getLang();
     $$('.lang').forEach(el => { 
-        if (el.getAttribute('data-lang') === M.lang) 
+        if (el.getAttribute('data-lang') === lang) 
             el.classList.add('active');
         else
             el.classList.remove('active');
     });
 }
-function clearTags(e) {
-    $$('.tag.active').forEach(el => { if (el !== e) el.classList.remove('active') });
-}
-
-function getOperations(meta, tag) {
-    return tag
-        ? meta.operations.filter(x => x.tags && x.tags.indexOf(tag) >= 0).map(op => op.request.name)
-        : meta.operations.map(op => op.request.name);
+function activateTag() {
+    $$('.tag').forEach(el => {
+        if (el.getAttribute('data-tag') === M.tag)
+            el.classList.add('active');
+        else
+            el.classList.remove('active');
+    });
 }
 
 let opsAwesomplete = null; 
 function updateLang() {
-    if (!M.lang) return;
+    let lang = M.getLang();
+    if (LOG) console.log(`updateLang(): lang:${lang}, tag:${M.tag}, meta:${!!M.meta}`);
+    if (!lang || !M.meta) return;
 
     let $form = $('#apiForm form');
     if (LOG) console.log('$form',$form);
@@ -501,40 +686,29 @@ function updateLang() {
 
     clearErrorSummary();
     setLoading('#embed-loading');
-    client.get(new GistRef({ slug:M.slug(), lang:M.lang }))
+    client.get(new GistRef({ slug:M.slug, lang:lang }))
         .then(r => {
             showEmbed(r);
         })
         .finally(() => endLoading('#embed-loading'));
-    
-    getSiteMeta(M.slug(), meta => {
-        let sortFn = (x,y) => x > y ? 1 : -1;
-        let ops = getOperations(meta);
-        //if (LOG) console.log(`selectLang ops *`, ops);
-        if (opsAwesomplete) {
-            opsAwesomplete.destroy();
-            opsAwesomplete = null;
-        }
-        opsAwesomplete = new Awesomplete('#txtRequest', { list:ops, sort:sortFn });
-        let tagNames = uniq(flatMap(x => x.tags, meta.operations.filter(x => x.tags)));
-        let sb = new StringBuffer();
-        tagNames.forEach(tag => 
-            sb.append(`<div class="tag text-xs inline-flex items-center font-bold leading-4 uppercase px-3 py-1 mr-1 bg-blue-100 text-blue-500 rounded-full cursor-pointer" data-tag="${tag}" data-click="selectTag">${tag}</div>`));
-        $("#tags").innerHTML = sb.toString();
-    });
-    updateDownload();
-}
 
-let SITES = {};
-function getSiteMeta(slug, cb) {
-    if (SITES[slug]) {
-        cb(SITES[slug])
-    } else {
-        client.get(new SiteMeta({ slug:slug }))
-            .then(r => {
-                cb(SITES[slug] = r.api)
-            });
+    let meta = M.meta;
+    let sortFn = (x,y) => x > y ? 1 : -1;
+    let ops = M.getOperationNames();
+    //if (LOG) console.log(`selectLang ops *`, ops);
+    if (opsAwesomplete) {
+        opsAwesomplete.destroy();
+        opsAwesomplete = null;
     }
+    opsAwesomplete = new Awesomplete('#txtRequest', { list:ops, sort:sortFn });
+    let tagNames = M.getUniqueTags();
+    let sb = new StringBuffer();
+    tagNames.forEach(tag =>
+        sb.append(`<div class="tag${tag === M.tag ? ' active' : ''} text-xs inline-flex items-center font-bold leading-4 uppercase px-3 py-1 mr-1 bg-blue-100 text-blue-500 rounded-full cursor-pointer" 
+                        data-tag="${tag}" data-click="selectTag">${tag}</div>`));
+    $("#tags").innerHTML = sb.toString();
+
+    updateDownload();
 }
 
 function setLoading(sel) {
@@ -551,29 +725,48 @@ function gistUrl(url) {
 function showEmbed(r) {
     let $embed = $('#embed');
     let embedUrl = gistUrl(`https://${r.id}`);
-    $embed.innerHTML = `<iframe id="iframe" class="w-wide-section h-embed" src="${embedUrl}">`;
+    $embed.innerHTML = `<a id="lnkFullscreen" class="absolute hide-loading inline-block" style="background:#f7f7f7; margin:.7rem 0 0 .25rem;z-index: 10" 
+                               href="${embedUrl}" target="_blank" title="Open in new fullscreen window">
+            <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+                <g><path d="M0,0h24v24H0V0z" fill="none"/></g>
+                <g><path fill="#666" d="M6,16h12V8H6V16z M8,10h8v4H8V10z M4,15H2v3c0,1.1,0.9,2,2,2h3v-2H4V15z M4,6h3V4H4C2.9,4,2,4.9,2,6v3h2V6z M20,4h-3v2h3v3 h2V6C22,4.9,21.1,4,20,4z M20,18h-3v2h3c1.1,0,2-0.9,2-2v-3h-2V18z"/></g>
+            </svg>
+        </a>
+        <iframe id="iframe" class="w-wide-section h-embed" src="${embedUrl}">`;
+    on('#iframe', {
+        load: () => M.trigger(M.EVENTS.IFrameLoad)
+    })
+}
+M.on(M.EVENTS.IFrameLoad, onIFrameLoad);
+function onIFrameLoad() {
+    console.log(`#iframe:load endLoading('#embed-loading')`);
+    endLoading('#embed-loading');
+    M.restoreFromStateIfExists();
 }
 
-function onUrlChange() {
-    let $baseUrl = $('#baseUrl'), $scheme = $('#scheme'), $lang = $('.lang.active');
-    let oldBaseUrl = M.baseUrl;
-    M.setScheme($scheme.value);
-    M.setBaseUrl($baseUrl.value);
-    if (M.baseUrl !== oldBaseUrl) {
-        clearForm();
-    }
-    M.setLang($lang ? $lang.getAttribute('data-lang') : null);
+function selectUrl() {
+    let $scheme = $('#scheme'), $baseUrl = $('#baseUrl');
+    M.setUrl($scheme.value, $baseUrl.value);
     $scheme.value = M.scheme;
     $baseUrl.value = M.baseUrl;
-    updateLang($lang);
-    updateHash();
 }
 
-on('#formUrl', { submit: e => { e.preventDefault(); onUrlChange(); } });
-on('#scheme,#baseUrl', { change: onUrlChange });
+M.on(M.EVENTS.UrlChange, onUrlChange);
+function onUrlChange() {
+    $('#txtRequest').value = '';
+    clearForm();
+}
+
+M.on(M.EVENTS.MetaLoad, onMetaLoad);
+function onMetaLoad() {
+    updateLang();
+}
+
+on('#formUrl', { submit: e => { e.preventDefault(); selectUrl(); } });
+on('#scheme,#baseUrl', { change: selectUrl });
 on('#btn-clear div', {
     click: function (e) {
-        M.reset();
+        M.setUrl($('#scheme').value, '');
     }
 })
 
@@ -662,7 +855,7 @@ function typeInfo(meta,prop) {
     info.ignore = (IgnoreTypes.indexOf(type) >= 0 || info.isDictionary || BuiltInTypes.indexOf(type) === -1)
         && !(info.elementType != null && BuiltInTypes.indexOf(info.elementType) >= 0);
     
-    if (LOG) console.log(`typeInfo(${prop.type})`, info);
+    //if (LOG) console.log(`typeInfo(${prop.type})`, info);
     return info;
 }
 
@@ -751,6 +944,7 @@ function isAutoQuery(request) {
     return request.inherits && request.inherits.name.startsWith('Query');
 }
 
+// used in guid onblur
 function toUUID(s) {
     if (!s) return s;
     if (s.length === 32) {
@@ -764,7 +958,7 @@ function createForm(request, meta) {
     let formCls = aqRequest || true ? '' : 'overflow-hidden sm:rounded-md'; //don't clip popups
 
     let sb = new StringBuffer(
-        `<form onsubmit="return applyForm(this)">
+        `<form onsubmit="return applyForm(this,true)">
             <div class="shadow ${formCls}">
               <div class="px-4 py-5 bg-white sm:p-6">
                 <div class="grid grid-cols-6 gap-3">`);
@@ -799,38 +993,40 @@ function createForm(request, meta) {
     return sb.toString();
 }
 
-function applyForm(form) {
+function applyForm(form,cache) {
     updateDownload();    
     if (!form) return;
     let opName = $('#txtRequest').value;
-    let obj = serializeToObject(form);
-    if (LOG) console.log('applyForm', opName, obj);
     if (!opName) return false;
-    let url = combinePaths(location.origin,'gists',M.slug(),M.getLang(),opName);
-    getSiteMeta(M.slug(), meta => {
-        let op = meta.operations.find(x => x.request.name === opName);
-        let request = op.request;
-        let args = new StringBuffer();
-        let props = typeProperties(meta,request);
-        props.forEach(prop => {
-            let value = obj[prop.name];
-            if (!value) return;
-            value = trimEnd(value.trim(),',');
-            let info = typeInfo(meta,prop);
-            if (args.getLength() > 0)
-                args.append(',');
-            args.append(prop.name);
-            args.append(':');
-            if (info.elementType)
-                args.append(`[${value}]`);
-            else
-                args.append(JSV.stringify(value));
-        });
-        let iframeSrc = gistUrl(url + '(' + args.toString() + ')');
-        if (LOG) console.log('iframeSrc',iframeSrc);
-        $('#iframe').src = iframeSrc;  
-    });
+    let obj = serializeToObject(form);
+    M.setFormState(obj,cache);
+    let $iframe = $('#iframe');
+    if ($iframe) {
+        let iframeSrc = M.getIFrameSrc();
+        setLoading('#embed-loading');
+        $('#lnkFullscreen').href = $iframe.src = iframeSrc;
+    } else if (LOG) console.log(`WARN applyForm(): #iframe not exists`);
     return false;
+}
+
+function getArgs(obj, request, meta) {
+    let args = new StringBuffer();
+    let props = typeProperties(meta,request);
+    props.forEach(prop => {
+        let value = obj[prop.name];
+        if (!value) return;
+        value = trimEnd(value.trim(),',');
+        let info = typeInfo(meta,prop);
+        if (args.getLength() > 0)
+            args.append(',');
+        args.append(prop.name);
+        args.append(':');
+        if (info.elementType)
+            args.append(`[${value}]`);
+        else
+            args.append(JSV.stringify(value));
+    });
+    return '(' + args.toString() + ')';
 }
 
 function updateDownload() {
@@ -881,77 +1077,111 @@ function clearAwesompleteInstances() {
     }
 }
 
-function selectOp(opName) {
-    if (!opName) {
+M.on(M.EVENTS.OpChange, onOpChange);
+function onOpChange() {
+    let $txtRequest = $('#txtRequest'); 
+    if (!M.op) {
+        $txtRequest.value = '';
         clearForm();
         return;
     }
-    getSiteMeta(M.slug(), meta => {
-        let op = meta.operations.find(x => x.request.name === opName);
-        if (!op) return;
-        if (op.requiresAuth)
-            document.body.classList.add('requires-auth');
-        else
-            document.body.classList.remove('requires-auth');
 
-        clearAwesompleteInstances();
+    $txtRequest.value = M.getOpName();
+    clearAwesompleteInstances();
 
-        let $apiForm = $('#apiForm');
-        $apiForm.innerHTML = createForm(op.request, meta);
+    let meta = M.meta, op = M.op;
+    let $apiForm = $('#apiForm');
+    $apiForm.innerHTML = createForm(op.request, meta);
 
-        if (isAutoQuery(op.request)) {
-            let targetName = op.request.inherits.genericArgs[0];
-            let target = findType(meta, targetName);
-            if (target) {
-                let targetPropNames = typeProperties(meta, target).map(x => x.name);
-                let props = typeProperties(meta,op.request).filter(prop => MultiPropFields.indexOf(prop.name) >= 0);
-                let cache = {};
-                props.forEach(prop => {
-                    let id = prop.name;
-                    let $input = $(`#${id}`);
-                    let instance = new Awesomplete($input, {
-                        list: targetPropNames,
-                        filter: function(text, input) {
-                            //console.log('filter', text, input, 1, input.indexOf(text.value + ','))
-                            if (input.indexOf(text.value + ',') >= 0)
-                                return false;
-                            return Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
-                        },
-                        item: function(text, input) {
-                            return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
-                        },
-                        replace: function(text) {
-                            let before = this.input.value.match(/^.+,\s*|/)[0];
-                            this.input.value = before + text + ", ";
-                        }
-                    });
-                    on($input, {
-                        mousedown: function () {
-                            let instance = awesompleteInstances.find(x => x.input === this);
-                            if (instance) {
-                                instance.evaluate();
-                                instance.open();
-                            }
-                        }
-                    })
-                    awesompleteInstances.push(instance);
-                    if (LOG) console.log('awesompleteInstances', awesompleteInstances)
+    populateForm(M.getFormState());
+    
+    if (isAutoQuery(op.request)) {
+        let targetName = op.request.inherits.genericArgs[0];
+        let target = findType(meta, targetName);
+        if (target) {
+            let targetPropNames = typeProperties(meta, target).map(x => x.name);
+            let props = typeProperties(meta,op.request).filter(prop => MultiPropFields.indexOf(prop.name) >= 0);
+            let cache = {};
+            props.forEach(prop => {
+                let id = prop.name;
+                let $input = $(`#${id}`);
+                let instance = new Awesomplete($input, {
+                    list: targetPropNames,
+                    filter: function(text, input) {
+                        //console.log('filter', text, input, 1, input.indexOf(text.value + ','))
+                        if (input.indexOf(text.value + ',') >= 0)
+                            return false;
+                        return Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
+                    },
+                    item: function(text, input) {
+                        return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
+                    },
+                    replace: function(text) {
+                        let before = this.input.value.match(/^.+,\s*|/)[0];
+                        this.input.value = before + text + ", ";
+                    }
                 });
-            } else if (LOG) console.error(`Could not find table: ${targetName}`);
-        }
+                on($input, {
+                    mousedown: function () {
+                        let instance = awesompleteInstances.find(x => x.input === this);
+                        if (instance) {
+                            instance.evaluate();
+                            instance.open();
+                        }
+                    }
+                })
+                awesompleteInstances.push(instance);
+                if (LOG) console.log('awesompleteInstances', awesompleteInstances)
+            });
+        } else if (LOG) console.error(`Could not find table: ${targetName}`);
+    }
 
-        let $input = $$('input,select,textarea',$apiForm)[0];
-        if ($input) $input.focus();
+    let $input = $$('input,select,textarea',$apiForm)[0];
+    if ($input) $input.focus();
 
-        applyForm($('#apiForm form'));
-    });
+    applyForm($('#apiForm form'));
+}
+
+function populateForm(formState) {
+    if (LOG) console.log(`populateForm():`, formState);
+    if (formState) {
+        let keys = Object.keys(formState);
+        keys.forEach(k => {
+            let val = formState[k];
+            if (!val) return;
+            let $el = $(`#${k}`);
+            if (!$el) {
+                if (LOG) console.log(`Could not find element for #${k}`);
+                return;
+            }
+            $el.value = val;
+        });
+    }
+}
+
+M.on(M.EVENTS.LangChange, onLangChange);
+function onLangChange() {
+    activateLang();
+    updateLang();
+}
+
+M.on(M.EVENTS.TagChange, onTagChange);
+function onTagChange() {
+    let ops = M.getOperationNames();
+    if (LOG) console.log(`onTagChange(): ops:${M.tag ?? '*'}`, ops);
+    activateTag();
+    opsAwesomplete.list = ops || [];
+    opsAwesomplete.input.focus();
+    updateDownload();
 }
 
 function init() {
     let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, 
-          StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap } = exports;
+          StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap,
+          lastLeftPart, lastRightPart } = exports;
     Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, 
-        enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap });
+        enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap,
+        lastLeftPart, lastRightPart });
     client = new JsonServiceClient();
     client.exceptionFilter = (res,err) => {
         setError(err.responseStatus || err, res.statusText || res.status);
@@ -967,23 +1197,13 @@ function init() {
                 ? this.getAttribute('data-lang') 
                 : null;
             M.setLang(lang);
-            updateLang();
-            updateHash();
         },
         selectTag: function () {
-            clearTags(this);
             this.classList.toggle('active');
             let tag = this.classList.contains('active') 
                 ? this.getAttribute('data-tag')
                 : null;
-            $('#txtRequest').value = '';
-            getSiteMeta(M.slug(), meta => {
-                let ops = getOperations(meta, tag);
-                if (LOG) console.log(`selectTag ops ${tag ?? '*'}`, ops);
-                opsAwesomplete.list = ops;
-                opsAwesomplete.input.focus();
-            });
-            updateDownload();
+            M.selectTag(tag);
         },
         openWith: function () {
             //alert('opening with ' + this.getAttribute('data-open'));
@@ -992,20 +1212,148 @@ function init() {
     on('#txtRequest', {
         'awesomplete-select': function (evt) {
             let opName = evt.text.value;
-            if (!opName) return;
-            if (LOG) console.log('awesomplete-select', opName, $('#txtRequest').value);
-            selectOp(opName);
+            let $txtRequest = $('#txtRequest');
+            if (LOG) console.log('awesomplete-select', opName, $txtRequest.value);
+            $txtRequest.value = M.selectOp(opName);
         },
         blur: function () {
             setTimeout(function () {
-                let opName = $('#txtRequest').value;
-                if (LOG) console.log('blur', opName);
-                selectOp(opName);
+                let $txtRequest = $('#txtRequest');
+                let opName = $txtRequest.value;
+                $txtRequest.value = M.selectOp(opName);
+                if (LOG) console.log(`on/setTimeout/blur(): ${M.getOpName()}`);
             }, 0)
         }
     })
 }
 document.addEventListener('DOMContentLoaded',init);
+
+function jsvParse(jsv) {
+    if (!jsv) return jsv;
+    if (jsv[0] === '{')
+        return jsvParseObject(jsv);
+    else if (jsv[0] === '[')
+        return jsvParseArray(jsv);
+    else
+        return jsvParseString(jsv);
+}
+function jsvParseObject(s) {
+    if (s[0] !== '{')
+        throw "Type definitions should start with a '{', got string starting with: "
+        + s.substr(0, s.length < 50 ? s.length : 50);
+    let k, obj = {};
+    if (s === '{}') return null;
+    for (let ref={i:1}, len = s.length; ref.i < len; ref.i++) {
+        k = jsvEatMapKey(s, ref);
+        ref.i++;
+        let v = jsvEatMapValue(s, ref);
+        obj[k]= jsvParse(v);
+    }
+    return obj;
+}
+function jsvParseString(s) {
+    return !s || s[0] !== '"' ? s : s.substr(1, s.length - 2).replace(/""/g, '"');
+}
+function jsvEatMapKey(s, ref) {
+    let pos = ref.i;
+    while (s[++ref.i] !== ':' && ref.i < s.length) { }
+    return s.substr(pos, ref.i - pos);
+}
+function jsvEatMapValue(s, ref) {
+    let tokPos = ref.i;
+    let sLen = s.length;
+    if (ref.i === sLen) return null;
+    let c = s[ref.i];
+    if (c === ',' || c === '}')
+        return null;
+    let inQ = false;
+    if (c === '[') { //Is List, i.e. [...]
+        let endsToEat = 1;
+        while (++ref.i < sLen && endsToEat > 0) {
+            c = s[ref.i];
+            if (c === '"')
+                inQ = !inQ;
+            if (inQ)
+                continue;
+            if (c === '[')
+                endsToEat++;
+            if (c === ']')
+                endsToEat--;
+        }
+        return s.substr(tokPos, ref.i - tokPos);
+    }
+    if (c === '{') { //Is Map, i.e. {...}
+        let endsToEat = 1;
+        while (++ref.i < sLen && endsToEat > 0) {
+            c = s[ref.i];
+            if (c === '"')
+                inQ = !inQ;
+            if (inQ)
+                continue;
+            if (c === '{')
+                endsToEat++;
+            if (c === '}')
+                endsToEat--;
+        }
+        return s.substr(tokPos, ref.i - tokPos);
+    }
+    if (c === '"') { //Is Within Quotes, i.e. "..."
+        while (++ref.i < sLen) {
+            c = s[ref.i];
+            if (c !== '"') continue;
+            let isQuote = ref.i + 1 < sLen && s[ref.i + 1] === '"';
+            ref.i++; //skip quote
+            if (!isQuote) break;
+        }
+        return s.substr(tokPos, ref.i - tokPos);
+    }
+    while (++ref.i < sLen) { //Is Value
+        c = s[ref.i];
+        if (c === ',' || c === '}') break;
+    }
+    return s.substr(tokPos, ref.i - tokPos);
+}
+function jsvParseArray(str) {
+    let to = [], s = jsvStripList(str);
+    if (!s) return to;
+    if (s[0] === '{') {
+        let ref = {i:0};
+        do {
+            let v = jsvEatMapValue(s, ref);
+            to.push(jsvParse(v));
+        } while (++ref.i < s.length);
+    } else {
+        for (let ref={i:0}; ref.i < s.length; ref.i++) {
+            let v = jsvEatUntil(s, ref, ',');
+            to.push(jsvParse(v));
+        }
+    }
+    return to;
+}
+function jsvStripList(s) {
+    if (!s) return null;
+    return s[0] === '[' ? s.substr(1, s.length - 2) : s;
+}
+function jsvEatUntil(s, ref, findChar) {
+    let tokPos = ref.i;
+    let sLen = s.length;
+    if (s[tokPos] !== '"') {
+        ref.i = s.indexOf(findChar, tokPos);
+        if (ref.i === -1) ref.i = sLen;
+        return s.substr(tokPos, ref.i - tokPos);
+    }
+    while (++ref.i < sLen) {
+        if (s[ref.i] === '"') {
+            if (ref.i + 1 >= sLen)
+                return s.substr(tokPos, ++ref.i - tokPos);
+            if (s[ref.i + 1] === '"')
+                ref.i++;
+            else if (s[ref.i + 1] === findChar)
+                return s.substr(tokPos, ++ref.i - tokPos);
+        }
+    }
+    throw "Could not find ending quote";
+}
 
 </script>
 
