@@ -30,6 +30,7 @@ void main(List<String> arguments) async {
 
   {API_COMMENT}Inspect.printDump(response);
   {INSPECT_VARS}
+  exit(0);
 }",
                 ["pubspec.yaml"] = @"name: my_app
 description: {DESCRIPTION}
@@ -38,7 +39,7 @@ environment:
   sdk: '>=2.8.1 <3.0.0'
 
 dependencies:
-  servicestack: ^1.0.26
+  servicestack: ^1.0.29
 
 dev_dependencies:
 #  pedantic: ^1.9.0",
@@ -46,7 +47,7 @@ dev_dependencies:
             InspectVarsResponse = "Inspect.vars({'response': response});";
             RequiresAuthTemplate = @"
   // Authentication is required
-  // client.post(new Authenticate()
+  // client.post(Authenticate()
   //   ..provider = 'credentials'
   //   ..userName = '...'
   //   ..password = '...');";
