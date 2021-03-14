@@ -15,7 +15,7 @@ a { color: #007bff }
 .invalid-feedback::before{content:"\2718"}
 .is-invalid::after{content:"\2718"}
 
-.hide-enabled,.loading,.show-loading,.show-error,.show-embed,.show-auth {display:none}
+.hide-enabled,.loading,.show-loading,.show-error,.show-embed,.show-auth,.show-fullscreen {display:none}
 .has-error .hide-error{display:none !important}
 
 .nourl .hide-enabled{display:block}
@@ -27,6 +27,13 @@ a { color: #007bff }
 .loading .show-loading.flex{display:flex}
 .loading .hide-loading{display:none}
 .has-embed .show-embed{display:block}
+
+.fullscreen .hide-fullscreen {display:none}
+.fullscreen .show-fullscreen {display:block}
+.fullscreen .max-fullscreen {width:100%}
+.fullscreen #btn-clear,.fullscreen .btn-help {position:absolute;right:125px}
+.fullscreen #formUrl {margin:0}
+.fullscreen #customize-embed {padding:0 .5rem}
 
 [data-open] { display: none; cursor: pointer }
 .csharp .show-csharp,.typescript .show-typescript,.dart .show-dart,.java .show-java,.kotlin .show-kotlin,.swift .show-swift,.vbnet .show-vbnet,.fsharp .show-fsharp
@@ -72,17 +79,27 @@ INPUT.text-3xl { line-height: 2.5rem }
 <body class="m-0 font-sans bg-gray-50 nourl">
 <i hidden>{{ '/js/hot-fileloader.js' |> ifDebugIncludeScript }}</i>
 
-<div class="container flex flex-col place-items-center">
-    <h1 class="mt-4 mb-1 text-6xl font-semibold text-center text-gray-700">Instant Client Apps</h1>
-    <small class="just-add mt-1 mb-2 text-base text-gray-400">just add</small>
+<div class="container flex flex-col place-items-center max-fullscreen">
+    <h1 class="mt-4 mb-1 text-6xl font-semibold text-center text-gray-700 hide-fullscreen">Instant Client Apps</h1>
+    <small class="just-add mt-1 mb-2 text-base text-gray-400 hide-fullscreen">just add</small>
 
-    <form id="formUrl">
-        <div class="mt-2 w-section flex justify-between">
+    <form id="formUrl" class=" max-fullscreen">
+        <div class="w-section flex justify-between max-fullscreen">
             <select id="scheme" class="border py-2 px-3 text-grey-900 text-3xl shadow bg-none">
                 <option value="https">https://</option>
                 <option value="http">http://</option>
             </select>
             <input id="baseUrl" class="flex-grow border py-2 px-3 text-grey-900 text-3xl shadow" type="text" placeholder="ServiceStack Base URL">
+            <select id="selLang" class="show-fullscreen border py-2 px-3 text-grey-900 text-3xl shadow bg-none">
+                <option value="csharp">C#</option>
+                <option value="typescript">Node.js</option>
+                <option value="dart">Dart</option>
+                <option value="java">Java</option>
+                <option value="kotlin">Kotlin</option>
+                <option value="swift">Swift</option>
+                <option value="vbnet">VB</option>
+                <option value="fsharp">F#</option>
+            </select>
         </div>
         <div id="btn-clear" class="show-enabled absolute text-right w-section">
             <div title="clear" class="float-right w-6 text-2xl text-gray-500 cursor-pointer" style="margin:-2.85rem 1rem 0 0">&#10005;</div>
@@ -94,13 +111,13 @@ INPUT.text-3xl { line-height: 2.5rem }
 
         <div class="text-center">
             <div class="error-summary invalid-feedback my-1"></div>
-            <small class="text-base text-gray-400">
+            <small class="text-base text-gray-400 hide-fullscreen">
                 try <a href="#techstacks.io">techstacks.io</a>
             </small>
         </div>
     </form>
 
-    <div class="flex justify-evenly langs m-4 pb-6 w-container">
+    <div class="flex justify-evenly langs m-4 pb-6 w-container hide-fullscreen">
         <span data-lang="csharp" class="lang project shadow-lg rounded-full cursor-pointer" title="C#" data-click="selectLang">
             <img class="w-25 h-25" src="assets/img/csharp.svg" alt="C# logo">
         </span>
@@ -134,7 +151,7 @@ INPUT.text-3xl { line-height: 2.5rem }
         </span>
     </div>
     
-    <div class="hide-enabled text-xl gray-500">
+    <div class="hide-enabled text-xl gray-500 mt-2">
         <p>
             Services built using <a href="https://servicestack.net">ServiceStack</a> can generate instant Client Apps for all
             <a href="https://docs.servicestack.net/add-servicestack-reference">supported languages</a> above.
@@ -150,10 +167,10 @@ INPUT.text-3xl { line-height: 2.5rem }
         <p></p>
     </div>
 
-    <div class="show-embed hide-error">
-        <div id="embed" class="hide-loading w-wide-section shadow h-embed"></div>
-        <div id="embed-loading" class="show-loading w-wide-section h-embed flex place-items-center bg-white shadow">
-            <div class="w-wide-section text-center text-2xl flex justify-center">
+    <div class="show-embed hide-error max-fullscreen">
+        <div id="embed" class="hide-loading w-wide-section shadow h-embed max-fullscreen"></div>
+        <div id="embed-loading" class="show-loading w-wide-section h-embed flex place-items-center bg-white shadow max-fullscreen">
+            <div class="w-wide-section text-center text-2xl flex justify-center max-fullscreen">
                 Loading
                 <img class="w-8 h-8 pl-1 pt-1" src="assets/img/loading.svg" alt="loading...">
             </div>
@@ -162,15 +179,15 @@ INPUT.text-3xl { line-height: 2.5rem }
         <div id="customize-embed" class="flex">
             <div class="flex-1">
                 <div id="tags" class="mt-2 flex" style="min-height:1.5rem"></div>
-                <div class="show-auth absolute" style="margin:1.3em 0 0 565px;z-index: 1">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
-                        <title>Requires Authentication</title>
-                        <path fill="#374151" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-                    </svg>
-                </div>
                 <label id="choose-api">
                     <input id="txtRequest" type="text" spellcheck="false" placeholder="Choose API"
                            class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
+                    <div id="btn-auth" class="show-auth absolute" style="margin: -2.5rem 0 0 -2.5rem; left:50%; z-index: 1">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
+                            <title>Requires Authentication</title>
+                            <path fill="#374151" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                        </svg>
+                    </div>
                 </label>
                 <div id="apiForm" class="mt-2 w-full"></div>
             </div>
@@ -279,6 +296,7 @@ let M = {
     args: null,
     include:'',
     errorStatus:null,
+    fullscreen:localStorage.getItem('fullscreen') === 'true',
     setUrl(scheme, baseUrl) {
         if (scheme === this.scheme && baseUrl === this.baseUrl) return;
 
@@ -452,6 +470,9 @@ let M = {
         if (this.op && this.op.requiresAuth) {
             cls.push('requires-auth');
         }
+        if (this.fullscreen) {
+            cls.push('fullscreen');
+        }
         document.body.className = cls.join(' ');
     },
     getIFrameSrc() {
@@ -484,6 +505,11 @@ let M = {
             return { title: `${this.slug} ${this.lang} ${opName}`, url: hashUrl };
         }
         return { title: `${this.slug} ${this.lang}`, url: hash };
+    },
+    toggleFullscreen() {
+        this.fullscreen = !this.fullscreen;
+        localStorage.setItem('fullscreen', this.fullscreen ? 'true' : 'false');
+        this.syncClasses();
     },
     updateHash() {
         if (!M.baseUrl) {
@@ -725,14 +751,23 @@ function gistUrl(url) {
 function showEmbed(r) {
     let $embed = $('#embed');
     let embedUrl = gistUrl(`https://${r.id}`);
-    $embed.innerHTML = `<a id="lnkFullscreen" class="absolute hide-loading inline-block" style="background:#f7f7f7; margin:.7rem 0 0 .25rem;z-index: 10" 
+    $embed.innerHTML = `<a id="lnkNewWindow" class="hidden absolute hide-loading inline-block hide-fullscreen" style="background:#f7f7f7; margin:.7rem 0 0 -1.75rem;z-index: 10" 
                                href="${embedUrl}" target="_blank" title="Open in new fullscreen window">
-            <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
-                <g><path d="M0,0h24v24H0V0z" fill="none"/></g>
-                <g><path fill="#666" d="M6,16h12V8H6V16z M8,10h8v4H8V10z M4,15H2v3c0,1.1,0.9,2,2,2h3v-2H4V15z M4,6h3V4H4C2.9,4,2,4.9,2,6v3h2V6z M20,4h-3v2h3v3 h2V6C22,4.9,21.1,4,20,4z M20,18h-3v2h3c1.1,0,2-0.9,2-2v-3h-2V18z"/></g>
-            </svg>
-        </a>
-        <iframe id="iframe" class="w-wide-section h-embed" src="${embedUrl}">`;
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>                               
+            </a>
+            <span data-click="toggleFullscreen" 
+                  class="absolute hide-loading inline-block cursor-pointer" style="background:#f7f7f7; margin:.7rem 0 0 .25rem;z-index: 10">
+                <svg class="hide-fullscreen" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+                    <title>Maximize</title>
+                    <g><path d="M0,0h24v24H0V0z" fill="none"/></g>
+                    <g><path fill="#666" d="M6,16h12V8H6V16z M8,10h8v4H8V10z M4,15H2v3c0,1.1,0.9,2,2,2h3v-2H4V15z M4,6h3V4H4C2.9,4,2,4.9,2,6v3h2V6z M20,4h-3v2h3v3 h2V6C22,4.9,21.1,4,20,4z M20,18h-3v2h3c1.1,0,2-0.9,2-2v-3h-2V18z"/></g>
+                </svg>
+                <svg class="show-fullscreen" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                    <title>Collapse</title>
+                    <path d="M0 0h24v24H0V0z" fill="none"/><path fill="#666" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                </svg>
+            </span>
+        <iframe id="iframe" class="h-embed w-full" src="${embedUrl}">`;
     on('#iframe', {
         load: () => M.trigger(M.EVENTS.IFrameLoad)
     })
@@ -766,7 +801,10 @@ on('#formUrl', { submit: e => { e.preventDefault(); selectUrl(); } });
 on('#scheme,#baseUrl', { change: selectUrl });
 on('#btn-clear div', {
     click: function (e) {
-        M.setUrl($('#scheme').value, '');
+        let $scheme = $('#scheme'), $baseUrl = $('#baseUrl');
+        M.setUrl($scheme.value, '');
+        $scheme.value = M.scheme;
+        $baseUrl.value = M.baseUrl;
     }
 })
 
@@ -1004,7 +1042,7 @@ function applyForm(form,cache) {
     if ($iframe) {
         let iframeSrc = M.getIFrameSrc();
         setLoading('#embed-loading');
-        $('#lnkFullscreen').href = $iframe.src = iframeSrc;
+        $('#lnkNewWindow').href = $iframe.src = iframeSrc;
     } else if (LOG) console.log(`WARN applyForm(): #iframe not exists`);
     return false;
 }
@@ -1205,6 +1243,7 @@ function init() {
                 : null;
             M.selectTag(tag);
         },
+        toggleFullscreen: M.toggleFullscreen.bind(M),
         openWith: function () {
             //alert('opening with ' + this.getAttribute('data-open'));
         }
@@ -1223,6 +1262,11 @@ function init() {
                 $txtRequest.value = M.selectOp(opName);
                 if (LOG) console.log(`on/setTimeout/blur(): ${M.getOpName()}`);
             }, 0)
+        }
+    })
+    on('#selLang', {
+        change: function () {
+            M.setLang(this.value);
         }
     })
 }
