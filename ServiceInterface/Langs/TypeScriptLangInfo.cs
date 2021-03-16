@@ -27,7 +27,7 @@ namespace Apps.ServiceInterface.Langs
   ""author"": """",
   ""license"": ""ISC"",
   ""dependencies"": {
-    ""@servicestack/client"": ""^1.0.47""
+    ""@servicestack/client"": ""^1.0.49""
   },
   ""devDependencies"": {
     ""ts-node"": ""^9.1.1"",

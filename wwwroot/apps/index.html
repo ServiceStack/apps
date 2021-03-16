@@ -206,10 +206,11 @@ INPUT.text-3xl { line-height: 2.5rem }
                         <div class="px-4 py-5 bg-white sm:p-6">
                             <div id="includeDtos"></div>
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Download</h3>
-                            <div id="zip">
-                                <a href="" class="flex justify-center">
-                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
-                                    <span id="lblProject" class="ml-1 text-2xl leading-9">MyApp</span>
+                            <div class="flex justify-center">
+                                <a id="zip" href="#">
+                                    <svg class="w-10 h-10 inline-block mb-2" xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none">
+                                        <path fill="currentColor" d="M9.49094 4.40235C9.1153 4.14129 8.66749 4 8.20693 4H4.25L4.09595 4.00519C2.92516 4.08436 2 5.05914 2 6.25V17.75L2.00519 17.904C2.08436 19.0748 3.05914 20 4.25 20H19.75L19.904 19.9948C21.0748 19.9156 22 18.9409 22 17.75V8.75L21.9948 8.59595L21.9785 8.43788C21.8266 7.34297 20.8867 6.5 19.75 6.5H12.022L9.64734 4.5215L9.49094 4.40235ZM13.4967 8V10.2451C13.4967 10.6593 13.8325 10.9951 14.2467 10.9951H14.9967V11.9976H14.7467C14.3325 11.9976 13.9967 12.3334 13.9967 12.7476C13.9967 13.1618 14.3325 13.4976 14.7467 13.4976H14.9967V14.9976H14.7467C14.3325 14.9976 13.9967 15.3334 13.9967 15.7476C13.9967 16.1618 14.3325 16.4976 14.7467 16.4976H14.9967V18.5H4.25L4.14823 18.4932C3.78215 18.4435 3.5 18.1297 3.5 17.75V10.499L8.20693 10.5L8.40335 10.4914C8.85906 10.4515 9.29353 10.2733 9.64734 9.9785L12.021 8H13.4967ZM16.4967 18.0004H16.7467C17.1609 18.0004 17.4967 17.6646 17.4967 17.2504C17.4967 16.8362 17.1609 16.5004 16.7467 16.5004H16.4967V15.0004H16.7467C17.1609 15.0004 17.4967 14.6646 17.4967 14.2504C17.4967 13.8362 17.1609 13.5004 16.7467 13.5004H16.4967V10.9951H17.2467C17.6609 10.9951 17.9967 10.6593 17.9967 10.2451V8H19.75L19.8518 8.00685C20.2178 8.05651 20.5 8.3703 20.5 8.75V17.75L20.4932 17.8518C20.4435 18.2178 20.1297 18.5 19.75 18.5H16.4967V18.0004ZM16.4967 8V9.49513L14.9967 9.49513V8H16.4967ZM4.25 5.5H8.20693L8.31129 5.5073C8.44893 5.52664 8.57923 5.58398 8.68706 5.67383L10.578 7.249L8.68706 8.82617L8.60221 8.88738C8.4841 8.96063 8.34729 9 8.20693 9L3.5 8.999V6.25L3.50685 6.14823C3.55651 5.78215 3.8703 5.5 4.25 5.5Z"/>
+                                    </svg><span id="lblProject" class="ml-1 text-2xl inline-block">MyApp</span>
                                 </a>
                             </div>
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Open With...</h3>
@@ -475,16 +476,19 @@ let M = {
         }
         document.body.className = cls.join(' ');
     },
-    getIFrameSrc() {
-        let opName = this.assertOp('setFormState');
-        if (!opName) return;
-        let url = combinePaths(location.origin,'gists',M.slug,M.lang,opName);
+    getGistUrl() {
+        let url = combinePaths(location.origin,'gists',M.slug,M.lang);
+        let opName = this.assertOp('getGistUrl');
+        if (opName) 
+            url = combinePaths(url, opName);
         let formState = this.getFormState();
-        if (formState) {
-            let args = getArgs(formState, this.op.request, M.meta);
-            url += args;
-        }
-        let iframeSrc = gistUrl(url);
+        return formState 
+            ? url + getArgs(formState, this.op.request, M.meta) 
+            : url;
+    },
+    getIFrameSrc() {
+        let url = this.getGistUrl();
+        let iframeSrc = embedUrl(url);
         if (LOG) console.log('iframeSrc',iframeSrc);
         return iframeSrc;
     },
@@ -744,30 +748,35 @@ function endLoading(sel) {
     $$(sel).forEach(el => el.parentElement.classList.remove('loading'));
 }
 
-function gistUrl(url) {
-    return `https://localhost:5001/embed?gist=` + encodeURIComponent(url);
+let BASE_URL='https://localhost:5001';
+function embedUrl(url) {
+    return `${BASE_URL}/embed?gist=` + encodeURIComponent(url);
+}
+function archiveUrl(url,filename) {
+    return `${BASE_URL}/archive?url=` + encodeURIComponent(url) + '&filename=' + filename;
 }
 
 function showEmbed(r) {
     let $embed = $('#embed');
-    let embedUrl = gistUrl(`https://${r.id}`);
-    $embed.innerHTML = `<a id="lnkNewWindow" class="hidden absolute hide-loading inline-block hide-fullscreen" style="background:#f7f7f7; margin:.7rem 0 0 -1.75rem;z-index: 10" 
-                               href="${embedUrl}" target="_blank" title="Open in new fullscreen window">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>                               
-            </a>
-            <span data-click="toggleFullscreen" 
-                  class="absolute hide-loading inline-block cursor-pointer" style="background:#f7f7f7; margin:.7rem 0 0 .25rem;z-index: 10">
-                <svg class="hide-fullscreen" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
-                    <title>Maximize</title>
-                    <g><path d="M0,0h24v24H0V0z" fill="none"/></g>
-                    <g><path fill="#666" d="M6,16h12V8H6V16z M8,10h8v4H8V10z M4,15H2v3c0,1.1,0.9,2,2,2h3v-2H4V15z M4,6h3V4H4C2.9,4,2,4.9,2,6v3h2V6z M20,4h-3v2h3v3 h2V6C22,4.9,21.1,4,20,4z M20,18h-3v2h3c1.1,0,2-0.9,2-2v-3h-2V18z"/></g>
-                </svg>
-                <svg class="show-fullscreen" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
-                    <title>Collapse</title>
-                    <path d="M0 0h24v24H0V0z" fill="none"/><path fill="#666" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-                </svg>
-            </span>
-        <iframe id="iframe" class="h-embed w-full" src="${embedUrl}">`;
+    let embedSrc = embedUrl(`https://${r.id}`);
+    $embed.innerHTML = `
+        <span data-click="toggleFullscreen" 
+              class="absolute hide-loading inline-block cursor-pointer" style="background:#f7f7f7; margin:.7rem 0 0 .25rem;z-index: 10">
+            <svg class="hide-fullscreen" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+                <title>Maximize</title>
+                <g><path d="M0,0h24v24H0V0z" fill="none"/></g>
+                <g><path fill="#666" d="M6,16h12V8H6V16z M8,10h8v4H8V10z M4,15H2v3c0,1.1,0.9,2,2,2h3v-2H4V15z M4,6h3V4H4C2.9,4,2,4.9,2,6v3h2V6z M20,4h-3v2h3v3 h2V6C22,4.9,21.1,4,20,4z M20,18h-3v2h3c1.1,0,2-0.9,2-2v-3h-2V18z"/></g>
+            </svg>
+            <svg class="show-fullscreen" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                <title>Collapse</title>
+                <path d="M0 0h24v24H0V0z" fill="none"/><path fill="#666" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+            </svg>
+        </span>
+        <a id="lnkNewWindow" class="absolute hide-loading inline-block hide-fullscreen" style="background:#f7f7f7;margin: .75rem 0 0 75.5rem" 
+           href="${embedSrc}" target="_blank" title="Open in new fullscreen window">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>                               
+        </a>
+        <iframe id="iframe" class="h-embed w-full" src="${embedSrc}"></iframe>`;
     on('#iframe', {
         load: () => M.trigger(M.EVENTS.IFrameLoad)
     })
@@ -1100,9 +1109,11 @@ function updateDownload() {
     </fieldset>`;
     
     let projectName = $('#txtProjectName').value || 'MyApp';
+    let filename = `${projectName}.zip`;
 
     $('#includeDtos').innerHTML = includeHtml;
-    $('#lblProject').innerHTML = `${projectName}.zip`;
+    $('#lblProject').innerHTML = filename;
+    $('#zip').href = archiveUrl(M.getGistUrl(), filename);
     
     //$('#customForm').innerHTML = ``;
 }
