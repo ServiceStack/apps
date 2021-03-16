@@ -53,6 +53,27 @@ INPUT.text-3xl { line-height: 2.5rem }
 #apiForm .awesomplete ul::-webkit-scrollbar { width:5px; height:8px; }
 #apiForm .awesomplete ul::-webkit-scrollbar-thumb { background-color: #e0e0e0; }
 
+[data-tab].active { background: #F4F5F7; color: #1f2937; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+em { font-family: monospace; font-style: normal; font-size: 120%; color: #05930c; }
+.sm em { font-size: 100%; }
+i.svg-copy { display: inline-block; vertical-align: middle;
+    background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2'%3E%3C/path%3E%3C/svg%3E");
+}
+pre.sh { background: #eee; border-radius: 5px; margin: 1rem 0; padding: .5rem 1rem; }
+pre label { overflow: hidden; text-overflow: ellipsis; }
+pre.sh::before { content: "$ "; }
+pre.copy { display: flex; padding-right: .5rem; }
+pre.copy label { flex: 1 1 auto; padding-right: 1rem; }
+pre.copy b { display: none; font-size: 12px; color: #888; padding-right:.25rem; font-weight:normal; }
+pre.copy b::before { content: "copied" }
+pre.copy div { flex: 1 1 auto; text-align: right; }
+pre.copy i { cursor:pointer; height:24px; width:24px; opacity: .8; }
+pre.copy i:hover { opacity: .6; }
+pre.copied b { display: inline-block; }
+pre.copied i { opacity: .4; }
+
 @media (min-width: 414px) {
     .just-add { display:none }
     .w-25{width:3.125rem}.h-25{height:3.125rem}
@@ -252,6 +273,84 @@ INPUT.text-3xl { line-height: 2.5rem }
                                     <span class="text-gray-500">Xcode</span>
                                 </div>
                             </div>
+
+                            <h3 class="uppercase my-4 text-base font-medium text-gray-900">Setup</h3>
+
+                            <div id="setup" class="tabs mt-2 flex flex-col" style="min-height:1.5rem">
+                                
+                                <div class="flex justify-evenly">
+                                    <div class="text-base inline-flex items-center leading-4 px-3 py-2 mr-1 text-gray-500 font-semibold rounded-md cursor-pointer"
+                                         data-tab="win" data-click="selectTab">Windows</div>
+                                    <div class="text-base inline-flex items-center leading-4 px-3 py-2 mr-1 text-gray-500 font-semibold rounded-md cursor-pointer"
+                                         data-tab="mac" data-click="selectTab">macOS</div>
+                                    <div class="text-base inline-flex items-center leading-4 px-3 py-2 mr-1 text-gray-500 font-semibold rounded-md cursor-pointer"
+                                         data-tab="linux" data-click="selectTab">Linux</div>
+                                </div>
+                                <div class="tab-content pt-2">
+                                    <div id="win" class="tab-pane">
+                                        <p class="">
+                                            1. <a href="https://dotnet.microsoft.com/download">Install .NET 5 SDK</a>
+                                        </p>
+                                        <p>
+                                            2. Use <em>Win+R</em> Shortcut and paste command below to run the
+                                            <a href="https://gist.cafe/install.ps1">install.ps1</a> script:
+                                        </p>
+                                        <pre class="sh copy"><label>powershell iwr gist.cafe/install.ps1 -useb | iex</label><b></b><i class="svg-copy" title="copy" onclick="copy(this)"></i></pre>
+                                        <p>
+                                            3. Add Applications to <em>%PATH%</em>
+                                        </p>
+                                        <ul class="list-inside list-disc">
+                                            <li>
+                                                Configure <a href="https://code.visualstudio.com/docs/setup/windows">VS Code</a>
+                                            </li>
+                                            <li>
+                                                Configure <a href="https://www.jetbrains.com/help/idea/working-with-the-ide-features-from-command-line.html#toolbox">JetBrains IDEs</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div id="mac" class="tab-pane">
+                                        <p class="">
+                                            1. <a href="https://dotnet.microsoft.com/download">Install .NET 5 SDK</a>
+                                        </p>
+                                        <p>
+                                            2. Download &amp; open <a href="https://gist.cafe/gist.dmg">gist.dmg</a> then copy the <b>gist</b> app to Applications:
+                                            <a href="https://gist.cafe/gist.dmg"><img src="https://gist.cafe/assets/img/install-gist.png" alt="Install gist.dmg" style="max-width:550px"></a>
+                                        </p>
+                                        <p>
+                                            3. Add Applications to <em>$PATH</em>
+                                        </p>
+                                        <ul class="list-inside list-disc">
+                                            <li>
+                                                Configure <a href="https://code.visualstudio.com/docs/setup/mac">VS Code</a>
+                                            </li>
+                                            <li>
+                                                Configure <a href="https://www.jetbrains.com/help/idea/working-with-the-ide-features-from-command-line.html#toolbox">JetBrains IDEs</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div id="linux" class="tab-pane">
+                                        <p class="">
+                                            1. <a href="https://dotnet.microsoft.com/download">Install .NET 5 SDK</a>
+                                        </p>
+                                        <p>
+                                            2. Run <a href="https://gist.cafe/install.sh">install.sh</a>:
+                                        </p>
+                                        <pre class="sh copy"><label>wget -qO- https://gist.cafe/install.sh | bash</label><b></b><i class="svg-copy" title="copy" onclick="copy(this)"></i></pre>
+                                        <p>
+                                            3. Add Applications to <em>$PATH</em>
+                                        </p>
+                                        <ul class="list-inside list-disc">
+                                            <li>
+                                                Configure <a href="https://code.visualstudio.com/docs/setup/linux">VS Code</a>
+                                            </li>
+                                            <li>
+                                                Configure <a href="https://www.jetbrains.com/help/idea/working-with-the-ide-features-from-command-line.html#toolbox">JetBrains IDEs</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -281,6 +380,7 @@ let M = {
         OpChange: 'op:change',
         TagChange: 'tag:change',
         LangChange: 'lang:change',
+        IncludeChange: 'include:change',
         IFrameLoad: 'iframe:load',
     },
     ON:{},
@@ -318,6 +418,7 @@ let M = {
     },
     setInclude(id) {
         localStorage.setItem('include:active',this.include=id);
+        this.trigger(this.EVENTS.IncludeChange);
         this.syncClasses();
     },
     getInclude() {
@@ -479,12 +580,15 @@ let M = {
     getGistUrl() {
         let url = combinePaths(location.origin,'gists',M.slug,M.lang);
         let opName = this.assertOp('getGistUrl');
-        if (opName) 
+        if (opName) {
+            if (this.include)
+                opName = `${this.include},${opName}`;
             url = combinePaths(url, opName);
-        let formState = this.getFormState();
-        return formState 
-            ? url + getArgs(formState, this.op.request, M.meta) 
-            : url;
+            let formState = this.getFormState();
+            return formState
+                ? url + getArgs(formState, this.op.request, M.meta)
+                : url;
+        }
     },
     getIFrameSrc() {
         let url = this.getGistUrl();
@@ -753,7 +857,7 @@ function embedUrl(url) {
     return `${BASE_URL}/embed?gist=` + encodeURIComponent(url);
 }
 function archiveUrl(url,filename) {
-    return `${BASE_URL}/archive?url=` + encodeURIComponent(url) + '&filename=' + filename;
+    return `${BASE_URL}/archive?url=` + encodeURIComponent(url) + '&name=' + filename;
 }
 
 function showEmbed(r) {
@@ -1081,7 +1185,7 @@ function updateDownload() {
     let $selectedTag = $('#tags .active');
     if ($selectedTag) {
         let tag = $selectedTag.getAttribute('data-tag');
-        dtoOptions.push({ id:'includeTag', label: `Only ${tag} DTOs`, value: '{' + tag + '}' });
+        dtoOptions.push({ id:'includeTag', label: `Only ${tag} DTOs`, value: '{' + tag + '}.*' });
     }
     let $txtRequest = $('#txtRequest');
     if ($txtRequest.value) {
@@ -1089,14 +1193,14 @@ function updateDownload() {
     }
     
     let selectedInclude = M.getInclude();
-    let selectedOption = dtoOptions.find(x => x.id === selectedInclude) || dtoOptions[dtoOptions.length-1];
+    let selectedOption = dtoOptions.find(x => x.value === selectedInclude) || dtoOptions[dtoOptions.length-1];
     selectedOption.checked = true;
 
     let sb = new StringBuffer();
     dtoOptions.forEach(x => {
         let checked = x.checked === true ? ' checked' : '';
         sb.append(`<div class="flex items-center">
-            <input id="${x.id}" name="include" value="${x.value}" ${checked} type="radio" onchange="M.setInclude('${x.id}')" 
+            <input id="${x.id}" name="include" value="${x.value}" ${checked} type="radio" onchange="M.setInclude('${x.value}')" 
                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
                 <label for="${x.id}" class="ml-3 block text-sm font-medium text-gray-700">${x.label}</label>
         </div>`);
@@ -1109,13 +1213,10 @@ function updateDownload() {
     </fieldset>`;
     
     let projectName = $('#txtProjectName').value || 'MyApp';
-    let filename = `${projectName}.zip`;
-
     $('#includeDtos').innerHTML = includeHtml;
-    $('#lblProject').innerHTML = filename;
-    $('#zip').href = archiveUrl(M.getGistUrl(), filename);
-    
-    //$('#customForm').innerHTML = ``;
+    $('#lblProject').innerHTML = `${projectName}.zip`;
+    $('#zip').href = archiveUrl(M.getGistUrl(), projectName);
+    console.log(M.getGistUrl())
 }
 
 let awesompleteInstances = [];
@@ -1221,8 +1322,53 @@ function onTagChange() {
     activateTag();
     opsAwesomplete.list = ops || [];
     opsAwesomplete.input.focus();
+    onOpChange();
     updateDownload();
 }
+
+M.on(M.EVENTS.IncludeChange, onIncludeChange);
+function onIncludeChange() {
+    onOpChange();
+    updateDownload();
+}
+
+function copy (e) {
+    let $el = document.createElement("input");
+    let $parent = e.parentElement;
+    let $lbl = $parent.firstElementChild;
+    $el.setAttribute("value", $lbl.innerText);
+    document.body.appendChild($el);
+    $el.select();
+    document.execCommand("copy");
+    document.body.removeChild($el);
+    $parent.classList.add('copied');
+}
+
+function getOS() {
+    let v = navigator.appVersion.toLowerCase();
+    if (v.indexOf('win')>=0) return 'win';
+    if (v.indexOf("mac")>=0) return 'mac';
+    if (v.indexOf("linux")>=0 || v.indexOf("x11")>=0) return "linux";
+    return 'win';
+}
+
+function selectTab(tab,tabs) {
+    $$('[data-tab]',tabs).forEach(el => {
+        if (el.getAttribute('data-tab') === tab) {
+            if (!el.classList.contains('active')) el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+    $$('.tab-pane',tabs).forEach(el => {
+        if (el.id === tab) {
+            if (!el.classList.contains('active')) el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+}
+selectTab(getOS(), $('#setup'));
 
 function init() {
     let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, 
@@ -1257,6 +1403,9 @@ function init() {
         toggleFullscreen: M.toggleFullscreen.bind(M),
         openWith: function () {
             //alert('opening with ' + this.getAttribute('data-open'));
+        },
+        selectTab: function () {
+            selectTab(this.getAttribute('data-tab'), this.closest('tabs'));
         }
     });
     on('#txtRequest', {

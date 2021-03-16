@@ -82,6 +82,21 @@ namespace Apps.ServiceInterface
                 args = kvps.FromJsv<Dictionary<string, string>>();
                 includeTypes = includeTypes.LeftPart('(');
                 requestDto = includeTypes.LastRightPart(',');
+                
+                //If any includeTypes were given (e.g. tag) use that instead of just Request DTO:
+                if (includeTypes.IndexOf(',') >= 0)
+                {
+                    includeTypes = includeTypes.LastLeftPart(',');
+                    //Replace URL-friendly brackets with braces
+                    includeTypes = includeTypes.Replace('[', '{').Replace(']', '}'); 
+                    //Treat '*' as All DTOs, i.e. don't limit included DTO Types 
+                    if (includeTypes == "*")
+                        includeTypes = null;
+                }
+                else if (!includeTypes.EndsWith(".*"))
+                {
+                    includeTypes += ".*";
+                }
             }
 
             var baseUrl = request.Slug;

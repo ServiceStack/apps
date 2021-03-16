@@ -28,7 +28,7 @@ namespace Apps.ServiceInterface
 
         public ConcurrentDictionary<string, LanguageInfo> Map { get; set; } = new();
 
-        public async Task<LanguageInfo> GetLangContentAsync(string lang, string requestDto=null)
+        public async Task<LanguageInfo> GetLangContentAsync(string lang, string includeTypes=null)
         {
             try
             {
@@ -39,8 +39,8 @@ namespace Apps.ServiceInterface
                 if (lang == "java" || lang == "kotlin")
                     langTypesUrl += "?Package=myapp";
                 
-                if (requestDto != null)
-                    langTypesUrl += (langTypesUrl.IndexOf('?') >= 0 ? "&" : "?") + $"IncludeTypes={requestDto}.*";
+                if (includeTypes != null)
+                    langTypesUrl += (langTypesUrl.IndexOf('?') >= 0 ? "&" : "?") + $"IncludeTypes={includeTypes}";
 
                 var content = await langTypesUrl
                     .GetStringFromUrlAsync(requestFilter:req => req.UserAgent = "apps.servicestack.net");
@@ -97,13 +97,13 @@ namespace Apps.ServiceInterface
 
         public ConcurrentDictionary<string, LanguageInfo> RequestMap { get; set; } = new();
 
-        public async Task<LanguageInfo> ForRequestAsync(string requestDto)
+        public async Task<LanguageInfo> ForRequestAsync(string includeTypes)
         {
-            if (RequestMap.TryGetValue(requestDto, out var requestLanguage))
+            if (RequestMap.TryGetValue(includeTypes, out var requestLanguage))
                 return requestLanguage;
 
-            requestLanguage = await Languages.GetLangContentAsync(Code, requestDto);
-            RequestMap[requestDto] = requestLanguage;
+            requestLanguage = await Languages.GetLangContentAsync(Code, includeTypes);
+            RequestMap[includeTypes] = requestLanguage;
             return requestLanguage;
         }
     }
