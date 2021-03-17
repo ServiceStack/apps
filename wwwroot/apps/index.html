@@ -1084,7 +1084,7 @@ function createInput(prop,info,meta) {
                 : E.enumNames[i];
             sb.append(`<option value="${value}">${desc}</option>`);
         }
-        return `<select name="${prop.name}" class="form-select mt-1 block w-full"><option></option>${sb.toString()}</select>`;
+        return `<select id="${prop.name}" name="${prop.name}" class="form-select mt-1 block w-full"><option></option>${sb.toString()}</select>`;
     }
     return `<input ${htmlAttrs(attrs)}>`;
 }
