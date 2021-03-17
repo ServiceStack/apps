@@ -124,15 +124,32 @@ namespace Apps.ServiceInterface
                 
                 var files = new Dictionary<string, GistFile>();
                 var description = $"{baseUrlTitle} {lang.Name} API";
-                var requestOp = site.Metadata.Api.Operations.FirstOrDefault(x => x.Request.Name == requestDto);
+                var meta = site.Metadata.Api;
+                var requestOp = meta.Operations.FirstOrDefault(x => x.Request.Name == requestDto);
                 var authTemplate = requestOp?.RequiresAuth == true
                     ? lang.RequiresAuthTemplate
                     : "";
+
+                var types = new List<string> { requestDto ?? "MyRequest" };
+                if (requestOp != null && args != null)
+                {
+                    var props = requestOp.Request.GetFlattenedProperties(meta);
+                    foreach (var entry in args)
+                    {
+                        var prop = props.FirstOrDefault(x =>
+                            string.Equals(x.Name, entry.Key, StringComparison.OrdinalIgnoreCase));
+                        var propType = prop?.Type != null ? meta.FindType(prop.Type, prop.TypeNamespace) : null;
+                        if (propType != null)
+                            types.Add(propType.Name);
+                    }
+                }
+
                 lang.Files.Each((string k, string v) => {
                     var content = v
                         .Replace("{BASE_URL}", baseUrl)
                         .Replace("{REQUEST}", requestDto ?? "MyRequest")
                         .Replace("{RESPONSE}", lang.GetResponse(requestOp))
+                        .Replace("{TYPES}", string.Join(", ", types))
                         .Replace("{API_COMMENT}", request.IncludeTypes != null ? "" : lang.LineComment)
                         .Replace("{REQUIRES_AUTH}", authTemplate)
                         .Replace("{DESCRIPTION}",description)
@@ -144,7 +161,7 @@ namespace Apps.ServiceInterface
                     using var jsScope = JsConfig.With(new Config { TextCase = textCase });
                     {
                         content = args != null
-                            ? content.Replace("{REQUEST_BODY}", lang.RequestBody(requestDto, args, site.Metadata.Api))
+                            ? content.Replace("{REQUEST_BODY}", lang.RequestBody(requestDto, args, meta))
                             : content.Replace("{REQUEST_BODY}", "");
                     }
 

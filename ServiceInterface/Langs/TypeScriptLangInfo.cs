@@ -41,7 +41,7 @@ namespace Apps.ServiceInterface.Langs
     }
 }",
                 ["index.ts"] = @"import { JsonServiceClient, Inspect } from '@servicestack/client';
-{API_COMMENT}import { {REQUEST} } from './dtos';
+{API_COMMENT}import { {TYPES} } from './dtos';
 
 let client = new JsonServiceClient('{BASE_URL}');
 
