@@ -35,7 +35,7 @@ a { color: #007bff }
 .fullscreen #formUrl {margin:0}
 .fullscreen #customize-embed {padding:0 .5rem}
 
-[data-open] { display: none; cursor: pointer }
+[data-use] { display: none; cursor: pointer }
 .csharp .show-csharp,.typescript .show-typescript,.dart .show-dart,.java .show-java,.kotlin .show-kotlin,.swift .show-swift,.vbnet .show-vbnet,.fsharp .show-fsharp
 { display: flex }
 
@@ -217,8 +217,8 @@ pre.copied i { opacity: .4; }
                 <div class="mt-2 text-gray-500 font-semibold uppercase text-right">Customize Download</div>
                 <label id="customize-download">
                     <input id="txtProjectName" type="text" spellcheck="false" placeholder="ProjectName"
-                           onkeypress="return event.charCode !== 32"
-                           onchange="this.value = this.value.replace(/\s/g,'')"
+                           onkeypress="return isAlphaNumeric(event.charCode)"
+                           onchange="this.value = this.value.replace(/[\W]+/g,'')"
                            oninput="updateDownload()"
                            class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
                 </label>
@@ -236,39 +236,39 @@ pre.copied i { opacity: .4; }
                             </div>
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Open With...</h3>
                             <div id="xopen" class="flex justify-center gap-5">
-                                <div data-open="folder" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
+                                <div data-use="folder" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
                                     <img class="w-10 h-10" src="assets/img/folder.svg" alt="Folder Icon">
                                     <span class="text-gray-500">Folder</span>
                                 </div>
-                                <div data-open="vscode" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
+                                <div data-use="code" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
                                     <img class="w-10 h-10" src="assets/img/vscode.svg" alt="VS Code Icon">
                                     <span class="text-gray-500">VS Code</span>
                                 </div>
-                                <div data-open="rider" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet show-fsharp">
+                                <div data-use="rider" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet">
                                     <img class="w-10 h-10" src="assets/img/rider.svg" alt="Rider Icon">
                                     <span class="text-gray-500">Rider</span>
                                 </div>
-                                <div data-open="devenv" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet show-fsharp">
+                                <div data-use="devenv" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet show-fsharp">
                                     <img class="w-10 h-10" src="assets/img/visualstudio.svg" alt="Visual Studio Icon">
                                     <span class="text-gray-500">Visual Studio</span>
                                 </div>
-                                <div data-open="webstorm" data-click="openWith" class="flex flex-col items-center text-center show-typescript show-dart">
+                                <div data-use="webstorm" data-click="openWith" class="flex flex-col items-center text-center show-typescript show-dart">
                                     <img class="w-10 h-10" src="assets/img/webstorm.svg" alt="Visual Studio Icon">
                                     <span class="text-gray-500">WebStorm</span>
                                 </div>
-                                <div data-open="androidstudio" data-click="openWith" class="flex flex-col items-center text-center show-dart show-java show-kotlin">
+                                <div data-use="studio" data-click="openWith" class="flex flex-col items-center text-center show-dart show-java show-kotlin">
                                     <img class="w-10 h-10" src="assets/img/androidstudio.svg" alt="Android Studio Icon">
                                     <span class="text-gray-500">Android Studio</span>
                                 </div>
-                                <div data-open="idea" data-click="openWith" class="flex flex-col items-center text-center show-java show-kotlin">
+                                <div data-use="idea" data-click="openWith" class="flex flex-col items-center text-center show-java show-kotlin">
                                     <img class="w-10 h-10" src="assets/img/idea.svg" alt="Intellij IDEA Icon">
                                     <span class="text-gray-500">Intellij IDEA</span>
                                 </div>
-                                <div data-open="appcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
+                                <div data-use="appcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
                                     <img class="w-10 h-10" src="assets/img/appcode.svg" alt="AppCode Icon">
                                     <span class="text-gray-500">App Code</span>
                                 </div>
-                                <div data-open="xcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
+                                <div data-use="xcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
                                     <img class="w-10 h-10" src="assets/img/xcode.svg" alt="Xcode Icon">
                                     <span class="text-gray-500">Xcode</span>
                                 </div>
@@ -577,7 +577,12 @@ let M = {
     getGistUrl() {
         if (!this.slug || !this.lang)
             throw new Error(`getGistUrl(): invalid state: ${this.slug}/${this.lang}`);
-        let url = combinePaths(location.origin,'gists',this.slug,this.lang);
+        return combinePaths(location.origin,this.getRelativeGistUrl());
+    },
+    getRelativeGistUrl() {
+        if (!this.slug || !this.lang)
+            throw new Error(`getRelativeGistUrl(): invalid state: ${this.slug}/${this.lang}`);
+        let url = combinePaths('gists',this.slug,this.lang);
         let opName = this.assertOp('getGistUrl');
         if (opName) {
             if (this.include)
@@ -588,6 +593,7 @@ let M = {
                 ? url + getArgs(formState, this.op.request, this.meta)
                 : url;
         }
+        return url;
     },
     getIFrameSrc() {
         let url = this.getGistUrl();
@@ -1222,6 +1228,10 @@ function updateDownload() {
     console.log(M.getGistUrl())
 }
 
+function isAlphaNumeric(c) {
+    return c >= 65 && c <= 90 || c >= 97 && c <= 122 || c >= 48 && c <= 57 || c === 95; //A-Za-z0-9_    
+}
+
 let awesompleteInstances = [];
 function clearAwesompleteInstances() {
     if (awesompleteInstances.length > 0) {
@@ -1405,7 +1415,11 @@ function init() {
         },
         toggleFullscreen: M.toggleFullscreen.bind(M),
         openWith: function () {
-            //alert('opening with ' + this.getAttribute('data-open'));
+            let use = this.getAttribute('data-use');
+            let name = $('#txtProjectName').value || 'MyApp';
+            let url = `gist://${rightPart(location.origin, '://')}/${rightPart(M.getRelativeGistUrl(),'://')}?use=${use}&name=${name}`;
+            if (LOG) console.log(`Open with... ${url}`);
+            location.href = url;
         },
         selectTab: function () {
             selectTab(this.getAttribute('data-tab'), this.closest('tabs'));
