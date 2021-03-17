@@ -369,7 +369,7 @@ pre.copied i { opacity: .4; }
 </div>
 
 <script>
-let LOG = location.search.indexOf('log=1') >= 0 || true;
+let LOG = location.search.indexOf('log=1') >= 0 || location.origin.startsWith("https://localhost");
 /** @type {JsonServiceClient} */
 let client = null;
 let LANGS = ['csharp','typescript','dart','java','kotlin','swift','vbnet','fsharp'];
@@ -1008,7 +1008,7 @@ function typeInfo(meta,prop) {
     };
     info.isClass = metaType != null || (!info.isNumeric && !BuiltInTypes.indexOf(type));
     info.ignore = (IgnoreTypes.indexOf(type) >= 0 || info.isDictionary || BuiltInTypes.indexOf(type) === -1)
-        && !(info.elementType != null && BuiltInTypes.indexOf(info.elementType) >= 0);
+        && !(info.elementType != null && BuiltInTypes.indexOf(info.elementType) >= 0) && !info.isEnum;
     
     //if (LOG) console.log(`typeInfo(${prop.type})`, info);
     return info;
@@ -1071,6 +1071,20 @@ function createInput(prop,info,meta) {
         attrs.pattern = "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
         attrs.title = "Valid UUID format";
         attrs.onblur = "this.value = toUUID(this.value); this.reportValidity()";
+    } 
+    else if (info.isEnum) {
+        let E = info.enumType;
+        let sb = new StringBuffer();
+        for (let i=0; i<E.enumNames.length; i++) {
+            let value = E.enumValues
+                ? E.enumValues[i]
+                : E.enumNames[i];
+            let desc = E.enumDescriptions
+                ? E.enumDescriptions[i]
+                : E.enumNames[i];
+            sb.append(`<option value="${value}">${desc}</option>`);
+        }
+        return `<select name="${prop.name}" class="form-select mt-1 block w-full"><option></option>${sb.toString()}</select>`;
     }
     return `<input ${htmlAttrs(attrs)}>`;
 }
@@ -1185,8 +1199,9 @@ function getArgs(obj, request, meta) {
 }
 
 function updateDownload() {
+    let $includeDtos = $('#includeDtos'), $lblProject = $('#lblProject'), $zip = $('#zip');
     if (!M.slug || !M.lang) {
-        $('#includeDtos').innerHTML = $('#lblProject').innerHTML = $('#zip').href= '';
+        $includeDtos.innerHTML = $lblProject.innerHTML = $zip.href= '';
         return;
     }
     
@@ -1222,9 +1237,9 @@ function updateDownload() {
     </fieldset>`;
     
     let projectName = $('#txtProjectName').value || 'MyApp';
-    $('#includeDtos').innerHTML = includeHtml;
-    $('#lblProject').innerHTML = `${projectName}.zip`;
-    $('#zip').href = archiveUrl(M.getGistUrl(), projectName);
+    $includeDtos.innerHTML = includeHtml;
+    $lblProject.innerHTML = `${projectName}.zip`;
+    $zip.href = archiveUrl(M.getGistUrl(), projectName);
     console.log(M.getGistUrl())
 }
 
@@ -1384,12 +1399,10 @@ function selectTab(tab,tabs) {
 selectTab(getOS(), $('#setup'));
 
 function init() {
-    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, 
-          StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap,
-          lastLeftPart, lastRightPart } = exports;
-    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, 
-        enc, StringBuffer, JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap,
-        lastLeftPart, lastRightPart });
+    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, 
+          htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart } = exports;
+    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, 
+        JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart });
     client = new JsonServiceClient();
     client.exceptionFilter = (res,err) => {
         setError(err.responseStatus || err, res.statusText || res.status);
