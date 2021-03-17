@@ -176,8 +176,8 @@ namespace Apps.ServiceInterface.Langs
             if (op?.Response != null)
             {
                 var genericArgs = op.Response.Name.IndexOf('`') >= 0 && op.Response.GenericArgs[0] == "'T" &&
-                                  op.DataModel != null
-                    ? new[] {op.DataModel.Name}
+                    (op.ViewModel != null || op.DataModel != null)
+                    ? new[] { op.ViewModel?.Name ?? op.DataModel.Name }
                     : op.Response.GenericArgs;
                 var typeName = GetTypeName(op.Response.Name, genericArgs);
                 return typeName;
