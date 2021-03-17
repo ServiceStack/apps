@@ -276,7 +276,7 @@ pre.copied i { opacity: .4; }
 
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Setup</h3>
 
-                            <div id="setup" class="tabs mt-2 flex flex-col" style="min-height:1.5rem">
+                            <div id="setup" class="tabs mt-2 mb-2 flex flex-col" style="min-height:1.5rem">
                                 
                                 <div class="flex justify-evenly">
                                     <div class="text-base inline-flex items-center leading-4 px-3 py-2 mr-1 text-gray-500 font-semibold rounded-md cursor-pointer"
@@ -286,7 +286,7 @@ pre.copied i { opacity: .4; }
                                     <div class="text-base inline-flex items-center leading-4 px-3 py-2 mr-1 text-gray-500 font-semibold rounded-md cursor-pointer"
                                          data-tab="linux" data-click="selectTab">Linux</div>
                                 </div>
-                                <div class="tab-content pt-2">
+                                <div class="tab-content pt-4">
                                     <div id="win" class="tab-pane">
                                         <p class="">
                                             1. <a href="https://dotnet.microsoft.com/download">Install .NET 5 SDK</a>
@@ -434,9 +434,6 @@ let M = {
         this.updateHash();
         this.syncClasses();
     },
-    getLang() {
-        return localStorage.getItem('lang:active') || 'csharp';
-    },
     setErrorStatus(status) {
         this.errorStatus = status;
         this.syncClasses();
@@ -578,7 +575,9 @@ let M = {
         document.body.className = cls.join(' ');
     },
     getGistUrl() {
-        let url = combinePaths(location.origin,'gists',M.slug,M.lang);
+        if (!this.slug || !this.lang)
+            throw new Error(`getGistUrl(): invalid state: ${this.slug}/${this.lang}`);
+        let url = combinePaths(location.origin,'gists',this.slug,this.lang);
         let opName = this.assertOp('getGistUrl');
         if (opName) {
             if (this.include)
@@ -586,7 +585,7 @@ let M = {
             url = combinePaths(url, opName);
             let formState = this.getFormState();
             return formState
-                ? url + getArgs(formState, this.op.request, M.meta)
+                ? url + getArgs(formState, this.op.request, this.meta)
                 : url;
         }
     },
@@ -788,9 +787,8 @@ function handleHash(path) {
 }
 
 function activateLang() {
-    let lang = M.getLang();
     $$('.lang').forEach(el => { 
-        if (el.getAttribute('data-lang') === lang) 
+        if (el.getAttribute('data-lang') === M.lang) 
             el.classList.add('active');
         else
             el.classList.remove('active');
@@ -807,7 +805,7 @@ function activateTag() {
 
 let opsAwesomplete = null; 
 function updateLang() {
-    let lang = M.getLang();
+    let lang = M.lang;
     if (LOG) console.log(`updateLang(): lang:${lang}, tag:${M.tag}, meta:${!!M.meta}`);
     if (!lang || !M.meta) return;
 
@@ -1181,6 +1179,11 @@ function getArgs(obj, request, meta) {
 }
 
 function updateDownload() {
+    if (!M.slug || !M.lang) {
+        $('#includeDtos').innerHTML = $('#lblProject').innerHTML = $('#zip').href= '';
+        return;
+    }
+    
     let dtoOptions = [{ id:'includeAll', label: 'All', value:'*' }];
     let $selectedTag = $('#tags .active');
     if ($selectedTag) {
