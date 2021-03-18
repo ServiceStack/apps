@@ -3,8 +3,8 @@
 <title>Instant Client Apps</title>
 <meta charset="UTF-8">
 <meta name="copyright" content="Copyright 2020. ServiceStack, Inc">
-<link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
-<link rel="stylesheet" href="litewind.css">
+<link rel="icon" type="image/svg+xml" href="/assets/img/logo.svg">
+<link rel="stylesheet" href="/assets/css/litewind.css">
 <style>
 a { color: #007bff }
 .container { }
@@ -94,8 +94,8 @@ pre.copied i { opacity: .4; }
 </style>
 
 <script>let exports = { __esModule:true }, module = { exports:exports }; function require(name) { return exports[name] || window[name] }</script>
-<script defer src="https://unpkg.com/@servicestack/client@1.0.47/dist/servicestack-client.min.js"></script>
-<script defer src="dtos.js"></script>
+<script defer src="/assets/js/servicestack-client.js"></script>
+<script defer src="/assets/js/dtos.js"></script>
 </head>
 <body class="m-0 font-sans bg-gray-50 nourl">
 <i hidden>{{ '/js/hot-fileloader.js' |> ifDebugIncludeScript }}</i>
@@ -140,35 +140,35 @@ pre.copied i { opacity: .4; }
 
     <div class="flex justify-evenly langs m-4 pb-6 w-container hide-fullscreen">
         <span data-lang="csharp" class="lang project shadow-lg rounded-full cursor-pointer" title="C#" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/csharp.svg" alt="C# logo">
+            <img class="w-25 h-25" src="/assets/img/csharp.svg" alt="C# logo">
         </span>
 
         <span data-lang="typescript" class="lang project hell shadow-lg rounded-full cursor-pointer" title="Node.js TypeScript" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/typescript.svg" alt="Node.js logo">
+            <img class="w-25 h-25" src="/assets/img/typescript.svg" alt="Node.js logo">
         </span>
 
         <span data-lang="dart" class="lang shadow-lg rounded-full cursor-pointer" title="Dart" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/dart.svg" alt="Dart logo">
+            <img class="w-25 h-25" src="/assets/img/dart.svg" alt="Dart logo">
         </span>
 
         <span data-lang="java" class="lang shadow-lg rounded-full cursor-pointer" title="Java" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/java.svg" alt="Java logo">
+            <img class="w-25 h-25" src="/assets/img/java.svg" alt="Java logo">
         </span>
 
         <span data-lang="kotlin" class="lang shadow-lg rounded-full cursor-pointer" title="Kotlin" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/kotlin.svg" alt="Kotlin logo">
+            <img class="w-25 h-25" src="/assets/img/kotlin.svg" alt="Kotlin logo">
         </span>
 
         <span data-lang="swift" class="lang shadow-lg rounded-full cursor-pointer" title="Swift" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/swift.svg" alt="Swift logo">
+            <img class="w-25 h-25" src="/assets/img/swift.svg" alt="Swift logo">
         </span>
 
         <span data-lang="vbnet" class="lang project shadow-lg rounded-full cursor-pointer" title="VB" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/vb.svg" alt="VB.NET logo">
+            <img class="w-25 h-25" src="/assets/img/vb.svg" alt="VB.NET logo">
         </span>
 
         <span data-lang="fsharp" class="lang shadow-lg rounded-full cursor-pointer" title="F#" data-click="selectLang">
-            <img class="w-25 h-25" src="assets/img/fsharp.svg" alt="F# logo">
+            <img class="w-25 h-25" src="/assets/img/fsharp.svg" alt="F# logo">
         </span>
     </div>
     
@@ -193,7 +193,7 @@ pre.copied i { opacity: .4; }
         <div id="embed-loading" class="show-loading w-wide-section h-embed flex place-items-center bg-white shadow max-fullscreen">
             <div class="w-wide-section text-center text-2xl flex justify-center max-fullscreen">
                 Loading
-                <img class="w-8 h-8 pl-1 pt-1" src="assets/img/loading.svg" alt="loading...">
+                <img class="w-8 h-8 pl-1 pt-1" src="/assets/img/loading.svg" alt="loading...">
             </div>
         </div>
         
@@ -237,39 +237,39 @@ pre.copied i { opacity: .4; }
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Open With...</h3>
                             <div id="xopen" class="flex justify-center gap-5">
                                 <div data-use="folder" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
-                                    <img class="w-10 h-10" src="assets/img/folder.svg" alt="Folder Icon">
+                                    <img class="w-10 h-10" src="/assets/img/folder.svg" alt="Folder Icon">
                                     <span class="text-gray-500">Folder</span>
                                 </div>
                                 <div data-use="code" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
-                                    <img class="w-10 h-10" src="assets/img/vscode.svg" alt="VS Code Icon">
+                                    <img class="w-10 h-10" src="/assets/img/vscode.svg" alt="VS Code Icon">
                                     <span class="text-gray-500">VS Code</span>
                                 </div>
                                 <div data-use="rider" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet">
-                                    <img class="w-10 h-10" src="assets/img/rider.svg" alt="Rider Icon">
+                                    <img class="w-10 h-10" src="/assets/img/rider.svg" alt="Rider Icon">
                                     <span class="text-gray-500">Rider</span>
                                 </div>
                                 <div data-use="devenv" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-vbnet show-fsharp">
-                                    <img class="w-10 h-10" src="assets/img/visualstudio.svg" alt="Visual Studio Icon">
+                                    <img class="w-10 h-10" src="/assets/img/visualstudio.svg" alt="Visual Studio Icon">
                                     <span class="text-gray-500">Visual Studio</span>
                                 </div>
                                 <div data-use="webstorm" data-click="openWith" class="flex flex-col items-center text-center show-typescript show-dart">
-                                    <img class="w-10 h-10" src="assets/img/webstorm.svg" alt="Visual Studio Icon">
+                                    <img class="w-10 h-10" src="/assets/img/webstorm.svg" alt="Visual Studio Icon">
                                     <span class="text-gray-500">WebStorm</span>
                                 </div>
                                 <div data-use="studio" data-click="openWith" class="flex flex-col items-center text-center show-dart show-java show-kotlin">
-                                    <img class="w-10 h-10" src="assets/img/androidstudio.svg" alt="Android Studio Icon">
+                                    <img class="w-10 h-10" src="/assets/img/androidstudio.svg" alt="Android Studio Icon">
                                     <span class="text-gray-500">Android Studio</span>
                                 </div>
                                 <div data-use="idea" data-click="openWith" class="flex flex-col items-center text-center show-java show-kotlin">
-                                    <img class="w-10 h-10" src="assets/img/idea.svg" alt="Intellij IDEA Icon">
+                                    <img class="w-10 h-10" src="/assets/img/idea.svg" alt="Intellij IDEA Icon">
                                     <span class="text-gray-500">Intellij IDEA</span>
                                 </div>
                                 <div data-use="appcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
-                                    <img class="w-10 h-10" src="assets/img/appcode.svg" alt="AppCode Icon">
+                                    <img class="w-10 h-10" src="/assets/img/appcode.svg" alt="AppCode Icon">
                                     <span class="text-gray-500">App Code</span>
                                 </div>
                                 <div data-use="xcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
-                                    <img class="w-10 h-10" src="assets/img/xcode.svg" alt="Xcode Icon">
+                                    <img class="w-10 h-10" src="/assets/img/xcode.svg" alt="Xcode Icon">
                                     <span class="text-gray-500">Xcode</span>
                                 </div>
                             </div>
@@ -856,12 +856,12 @@ function endLoading(sel) {
     $$(sel).forEach(el => el.parentElement.classList.remove('loading'));
 }
 
-let BASE_URL='https://localhost:5001';
+let GISTCAFE_URL=location.origin.indexOf('apps.servicestack.net') >= 0 ? 'https://gist.cafe' : 'https://localhost:5001';
 function embedUrl(url) {
-    return `${BASE_URL}/embed?gist=` + encodeURIComponent(url);
+    return `${GISTCAFE_URL}/embed?gist=` + encodeURIComponent(url);
 }
 function archiveUrl(url,filename) {
-    return `${BASE_URL}/archive?url=` + encodeURIComponent(url) + '&name=' + filename;
+    return `${GISTCAFE_URL}/archive?url=` + encodeURIComponent(url) + '&name=' + filename;
 }
 
 function showEmbed(r) {
@@ -891,7 +891,7 @@ function showEmbed(r) {
 }
 M.on(M.EVENTS.IFrameLoad, onIFrameLoad);
 function onIFrameLoad() {
-    console.log(`#iframe:load endLoading('#embed-loading')`);
+    if (LOG) console.log(`#iframe:load endLoading('#embed-loading')`);
     endLoading('#embed-loading');
     M.restoreFromStateIfExists();
 }
@@ -1240,7 +1240,7 @@ function updateDownload() {
     $includeDtos.innerHTML = includeHtml;
     $lblProject.innerHTML = `${projectName}.zip`;
     $zip.href = archiveUrl(M.getGistUrl(), projectName);
-    console.log(M.getGistUrl())
+    if (LOG) console.log(`updateDownload(): ${M.getGistUrl()}`);
 }
 
 function isAlphaNumeric(c) {
@@ -1594,8 +1594,8 @@ function jsvEatUntil(s, ref, findChar) {
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RFJMWNBD9F"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-RFJMWNBD9F');</script>
 
-<link rel="stylesheet" href="assets/lib/awesomplete.css">
-<script src="assets/lib/awesomplete.js"></script>
+<link rel="stylesheet" href="/assets/lib/awesomplete.css">
+<script src="/assets/lib/awesomplete.js"></script>
 
 </body>
 </html>
