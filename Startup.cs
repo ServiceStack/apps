@@ -11,7 +11,9 @@ using ServiceStack.Configuration;
 using ServiceStack.Script;
 using ServiceStack.Web;
 using System;
+using System.IO;
 using Apps.ServiceInterface;
+using ServiceStack.IO;
 using ServiceStack.Text;
 using ServiceStack.Logging;
 

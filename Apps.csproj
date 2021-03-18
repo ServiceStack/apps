@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="files\java" />
-    <Folder Include="wwwroot\apps\assets\lib" />
     <Folder Include="wwwroot\explorer" />
     <Folder Include="wwwroot\projects" />
   </ItemGroup>

@@ -6,28 +6,10 @@ using ServiceStack;
 using ServiceStack.IO;
 using ServiceStack.Text;
 using Apps.ServiceInterface.Langs;
+using Apps.ServiceModel;
 
 namespace Apps.ServiceInterface
 {
-    [Route("/gists")]
-    [Route("/gists/{Slug}/{Lang}")]
-    [Route("/gists/{Slug}/{Lang}/{IncludeTypes}")]
-    public class GistRef
-    {
-        public string Slug { get; set; }
-        public string Lang { get; set; }
-        public string IncludeTypes { get; set; }
-        public bool? NoCache { get; set; }
-    }
-
-    [Route("/gists/files/{Slug}/{Lang}/{File}")]
-    public class GistRefFile
-    {
-        public string Slug { get; set; }
-        public string Lang { get; set; }
-        public string File { get; set; }
-    }
-
     public class ServiceRefServices : Service
     {
         public Sites Sites { get; set; }
@@ -215,10 +197,10 @@ namespace Apps.ServiceInterface
                     hashCode.Add(entry.Value);
                 });
                 // to.Id = $"{Math.Abs(hashCode.ToHashCode())}";
-                var scheme = Request.AbsoluteUri.LeftPart("://");
-                to.Id = scheme == "http" 
-                    ? "http." + Request.AbsoluteUri.RightPart("://")
-                    : Request.AbsoluteUri.RightPart("://");
+                var withoutScheme = Request.AbsoluteUri.RightPart("://");
+                to.Id = !Request.IsSecureConnection 
+                    ? "http:" + withoutScheme
+                    : withoutScheme;
                 return to;
             });
             return new HttpResult(gist) {
