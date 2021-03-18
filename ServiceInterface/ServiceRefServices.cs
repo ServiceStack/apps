@@ -196,11 +196,7 @@ namespace Apps.ServiceInterface
                     hashCode.Add(entry.Key);
                     hashCode.Add(entry.Value);
                 });
-                // to.Id = $"{Math.Abs(hashCode.ToHashCode())}";
-                var withoutScheme = Request.AbsoluteUri.RightPart("://");
-                to.Id = !Request.IsSecureConnection 
-                    ? "http:" + withoutScheme
-                    : withoutScheme;
+                to.Id = Request.AbsoluteUri;
                 return to;
             });
             return new HttpResult(gist) {
