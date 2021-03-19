@@ -264,13 +264,13 @@ pre.copied i { opacity: .4; }
                                     <img class="w-10 h-10" src="/assets/img/idea.svg" alt="Intellij IDEA Icon">
                                     <span class="text-gray-500">Intellij IDEA</span>
                                 </div>
-                                <div data-use="appcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
-                                    <img class="w-10 h-10" src="/assets/img/appcode.svg" alt="AppCode Icon">
-                                    <span class="text-gray-500">App Code</span>
-                                </div>
                                 <div data-use="xcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
                                     <img class="w-10 h-10" src="/assets/img/xcode.svg" alt="Xcode Icon">
                                     <span class="text-gray-500">Xcode</span>
+                                </div>
+                                <div data-use="appcode" data-click="openWith" class="flex flex-col items-center text-center show-swift">
+                                    <img class="w-10 h-10" src="/assets/img/appcode.svg" alt="AppCode Icon">
+                                    <span class="text-gray-500">App Code</span>
                                 </div>
                             </div>
 
@@ -397,6 +397,7 @@ let M = {
     args: null,
     include:'',
     errorStatus:null,
+    iframeLoading:false,
     fullscreen:localStorage.getItem('fullscreen') === 'true',
     setUrl(scheme, baseUrl) {
         if (scheme === this.scheme && baseUrl === this.baseUrl) return;
@@ -823,12 +824,11 @@ function updateLang() {
     }
 
     clearErrorSummary();
-    setLoading('#embed-loading');
+    setLoading('#embed-loading'); //hides on onIFrameLoad()
     client.get(new GistRef({ slug:M.slug, lang:lang }))
         .then(r => {
             showEmbed(r);
-        })
-        .finally(() => endLoading('#embed-loading'));
+        });
 
     let meta = M.meta;
     let sortFn = (x,y) => x > y ? 1 : -1;
@@ -850,9 +850,16 @@ function updateLang() {
 }
 
 function setLoading(sel) {
-    $$(sel).forEach(el => el.parentElement.classList.add('loading'));
+    if (LOG) console.log(`setLoading(${sel})`);
+    M.iframeLoading = true;
+    setTimeout(() => {
+        if (M.iframeLoading)
+            $$(sel).forEach(el => el.parentElement.classList.add('loading'));
+    }, 100);
 }
 function endLoading(sel) {
+    if (LOG) console.log(`endLoading(${sel})`);
+    M.iframeLoading = false;
     $$(sel).forEach(el => el.parentElement.classList.remove('loading'));
 }
 
@@ -866,7 +873,7 @@ function archiveUrl(url,filename) {
 
 function showEmbed(r) {
     let $embed = $('#embed');
-    let embedSrc = embedUrl(`https://${r.id}`);
+    let embedSrc = embedUrl(r.id);
     $embed.innerHTML = `
         <span data-click="toggleFullscreen" 
               class="absolute hide-loading inline-block cursor-pointer" style="background:#f7f7f7; margin:.7rem 0 0 .25rem;z-index: 10">
@@ -891,9 +898,9 @@ function showEmbed(r) {
 }
 M.on(M.EVENTS.IFrameLoad, onIFrameLoad);
 function onIFrameLoad() {
-    if (LOG) console.log(`#iframe:load endLoading('#embed-loading')`);
-    endLoading('#embed-loading');
+    if (LOG) console.log(`onIFrameLoad()`);
     M.restoreFromStateIfExists();
+    endLoading('#embed-loading');
 }
 
 function selectUrl() {
