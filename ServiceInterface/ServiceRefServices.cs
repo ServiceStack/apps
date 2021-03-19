@@ -175,12 +175,16 @@ namespace Apps.ServiceInterface
                     Type = MimeTypes.PlainText,
                     Raw_Url = langInfo.Url,
                 };
+
+                var resolvedUrl = Request.IsSecureConnection
+                    ? "https://" + Request.AbsoluteUri.RightPart("://")
+                    : Request.AbsoluteUri;
                 var to = new GithubGist {
                     Description = description,
                     Created_At = DateTime.UtcNow,
                     Files = files,
                     Public = true,
-                    Url = Request.AbsoluteUri,
+                    Url = resolvedUrl,
                     Owner = new GithubUser {
                         Id = 76883648,
                         Login = "gistcafe",
@@ -196,7 +200,7 @@ namespace Apps.ServiceInterface
                     hashCode.Add(entry.Key);
                     hashCode.Add(entry.Value);
                 });
-                to.Id = Request.AbsoluteUri;
+                to.Id = resolvedUrl;
                 return to;
             });
             return new HttpResult(gist) {
