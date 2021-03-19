@@ -1,2 +1,3 @@
-# appscafe
-apps.cafe
+# Client Apps
+
+Create Client Apps for ServiceStack Services
