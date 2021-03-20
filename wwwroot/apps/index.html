@@ -398,6 +398,7 @@ let M = {
     include:'',
     errorStatus:null,
     iframeLoading:false,
+    hasInit:false,
     fullscreen:localStorage.getItem('fullscreen') === 'true',
     setUrl(scheme, baseUrl) {
         if (scheme === this.scheme && baseUrl === this.baseUrl) return;
@@ -489,7 +490,7 @@ let M = {
     },
     setHashState(state) {
         if (LOG) console.log(`setHashState():`, state);
-        M.setUrl(state.scheme, state.baseUrl);
+        this.setUrl(state.scheme, state.baseUrl);
         if (state.lang) this.setLang(state.lang);
         this.state = state;
         this.restoreFromStateIfExists();
@@ -516,7 +517,7 @@ let M = {
             client.get(new SiteMeta({ slug:this.slug }))
                 .then(r => {
                     this.meta = this.SITES[this.slug] = r.api;
-                    this.trigger(M.EVENTS.MetaLoad);
+                    this.trigger(this.EVENTS.MetaLoad);
                     this.restoreFromStateIfExists();
                 });
         }
@@ -544,8 +545,8 @@ let M = {
     },
     selectTag(tag) {
         if (LOG) console.log(`selectTag(): ${tag}`);
-        M.selectOp(null);
-        M.tag = tag;
+        this.selectOp(null);
+        this.tag = tag;
         this.trigger(this.EVENTS.TagChange);
     },
     reset() {
@@ -614,7 +615,7 @@ let M = {
         let formState = this.getFormState();
         if (opName && formState) {
             let args = getArgs(formState, this.op.request, this.meta);
-            let tag = M.tag ? M.tag + '/' : '';
+            let tag = this.tag ? this.tag + '/' : '';
             let hashUrl = hash + '/' + tag + opName + args;
             return { title: `${this.slug} ${this.lang} ${opName}`, url: hashUrl };
         }
@@ -626,7 +627,11 @@ let M = {
         this.syncClasses();
     },
     updateHash() {
-        if (!M.baseUrl) {
+        if (!this.hasInit) {
+            if (LOG) console.log(`updateHash(): !hasInit, ignoring.`);
+            return;
+        }
+        if (!this.baseUrl) {
             this.clearHash();
         } else {
             let hashState = this.getHashState(); 
@@ -800,6 +805,7 @@ function activateLang() {
         else
             el.classList.remove('active');
     });
+    $('#selLang').value = M.lang;
 }
 function activateTag() {
     $$('.tag').forEach(el => {
@@ -1403,7 +1409,6 @@ function selectTab(tab,tabs) {
         }
     });
 }
-selectTab(getOS(), $('#setup'));
 
 function init() {
     let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, 
@@ -1416,6 +1421,7 @@ function init() {
         console.log(err);
     };
 
+    selectTab(getOS(), $('#setup'));
     if (location.hash) {
         handleHash(location.hash.substring(1));
     }
@@ -1460,12 +1466,13 @@ function init() {
                 if (LOG) console.log(`on/setTimeout/blur(): ${M.getOpName()}`);
             }, 0)
         }
-    })
+    });
     on('#selLang', {
         change: function () {
             M.setLang(this.value);
         }
-    })
+    });
+    M.hasInit = true;
 }
 document.addEventListener('DOMContentLoaded',init);
 
