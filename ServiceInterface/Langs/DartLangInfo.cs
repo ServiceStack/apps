@@ -17,14 +17,15 @@ namespace Apps.ServiceInterface.Langs
             Files = new Dictionary<string, string> {
                 ["bin\\my_app.dart"] = @"import 'dart:io';
 import 'dart:typed_data';
-import 'package:servicestack/client.dart';
+import 'package:servicestack/web_client.dart'
+  if (dart.library.io) 'package:servicestack/client.dart';
 import 'package:servicestack/inspect.dart';
 
 import '../lib/dtos.dart';
 
 void main(List<String> arguments) async {
 
-  var client = new JsonServiceClient('{BASE_URL}');{REQUIRES_AUTH}
+  var client = ClientFactory.create('{BASE_URL}');{REQUIRES_AUTH}
 
   {API_COMMENT}var response = await client.send({REQUEST}(){REQUEST_BODY});
 
@@ -39,7 +40,7 @@ environment:
   sdk: '>=2.8.1 <3.0.0'
 
 dependencies:
-  servicestack: ^1.0.29
+  servicestack: ^1.0.30
 
 dev_dependencies:
 #  pedantic: ^1.9.0",
