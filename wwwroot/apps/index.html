@@ -15,7 +15,7 @@ a { color: #007bff }
 .invalid-feedback::before{content:"\2718"}
 .is-invalid::after{content:"\2718"}
 
-.hide-enabled,.loading,.show-loading,.show-error,.show-embed,.show-auth,.show-fullscreen {display:none}
+.hide-enabled,.loading,.show-loading,.show-error,.show-embed,.show-auth,.show-fullscreen,.modal {display:none}
 .has-error .hide-error{display:none !important}
 
 .nourl .hide-enabled{display:block}
@@ -34,6 +34,7 @@ a { color: #007bff }
 .fullscreen #btn-clear,.fullscreen .btn-help {position:absolute;right:125px}
 .fullscreen #formUrl {margin:0}
 .fullscreen #customize-embed {padding:0 .5rem}
+.modal.active {display:block}
 
 [data-use] { display: none; cursor: pointer }
 .csharp .show-csharp,.typescript .show-typescript,.dart .show-dart,.java .show-java,.kotlin .show-kotlin,.swift .show-swift,.vbnet .show-vbnet,.fsharp .show-fsharp
@@ -73,6 +74,12 @@ pre.copy i { cursor:pointer; height:24px; width:24px; opacity: .8; }
 pre.copy i:hover { opacity: .6; }
 pre.copied b { display: inline-block; }
 pre.copied i { opacity: .4; }
+#mix pre label { max-width: 482px }
+#mix pre b { position: absolute; margin: 0 0 0 450px; background: #eee; line-height: 1.6em; padding: 0 0 0 5px }
+
+#lnkEmbed { margin: .5rem 0 0 75.5rem }
+#lnkEmbed span { visibility: hidden }
+#lnkEmbed:hover span { visibility: visible }
 
 @media (min-width: 414px) {
     .just-add { display:none }
@@ -226,6 +233,7 @@ pre.copied i { opacity: .4; }
                     <div class="shadow overflow-hidden sm:rounded">
                         <div class="px-4 py-5 bg-white sm:p-6">
                             <div id="includeDtos"></div>
+                            
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Download</h3>
                             <div class="flex justify-center">
                                 <a id="zip" href="#">
@@ -234,6 +242,13 @@ pre.copied i { opacity: .4; }
                                     </svg><span id="lblProject" class="ml-1 text-2xl inline-block">MyApp</span>
                                 </a>
                             </div>
+
+                            <h3 class="uppercase my-4 text-base font-medium text-gray-900">Mix into Directory</h3>
+                            <div id="mix" class="w-full">
+                                <pre class="sh copy"><label></label><b></b><i class="svg-copy" title="copy" onclick="copy(this)"></i></pre>
+                                <p>Mix source files into current directory, preserving any existing files.</p>
+                            </div>
+                            
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Open With...</h3>
                             <div id="xopen" class="flex justify-center gap-5">
                                 <div data-use="folder" data-click="openWith" class="flex flex-col items-center text-center show-csharp show-typescript show-dart show-java show-kotlin show-swift show-vbnet show-fsharp">
@@ -357,6 +372,64 @@ pre.copied i { opacity: .4; }
         </div>
     </div>
 </div>
+
+<div id="embed-modal" class="modal antialiased font-sans bg-gray-200 overflow-hidden"><div>
+    <div class="bg-gray-300">
+        <div class="fixed z-10 inset-0 overflow-y-auto">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0" onclick="hideEmbedDialog()">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                </div>
+                <!-- This element is to trick the browser into centering the modal contents. -->
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full w-section" 
+                     role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+                    <div class="bg-white px-4 pt-1 pb-4 sm:p-2 sm:pb-4" onclick="event.stopPropagation()">
+                        <div class="sm:flex sm:items-start">
+                            <div class="flex w-full">
+                                <div class="flex flex-col flex-grow">
+                                    <label for="ModalIFrame" class="text-lg leading-2 my-2">Embed Source Code</label>
+                                    <textarea id="ModalIFrame" name="ModalIFrame" onfocus="copyEmbedSource()" style="height:9.1rem" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-sm border-gray-300 rounded-md"></textarea>
+                                    <div class="mt-2">
+                                        <button id="ModalCopy" type="button" onclick="copyEmbedSource()" class="rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="w-50 flex flex-col">
+                                    <div title="close" class="w-6 text-lg text-gray-400 hover:text-gray-700 cursor-pointer text-right w-full" onclick="hideEmbedDialog()">✕</div>
+                                    <form onsubmit="return false">
+                                        <div class="px-4 bg-white">
+                                            <div class="grid grid-cols-6 gap-3">
+                                                <div class="col-span-6">
+                                                    <label for="ModalHeight" class="block text-sm font-medium text-gray-700">Height</label>
+                                                    <input id="ModalHeight" name="ModalHeight" oninput="updateEmbedModal()" type="number" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-sm border-gray-300 rounded-md" min="0" oninput="validity.valid||(value='')" value="750">
+                                                </div>
+                                                <div class="col-span-6">
+                                                    <label for="ModalTitle" class="block text-sm font-medium text-gray-700">Title</label>
+                                                    <input id="ModalTitle" name="ModalTitle" oninput="updateEmbedModal()" type="text" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-sm border-gray-300 rounded-md">
+                                                </div>
+                                                <div class="col-span-6">
+                                                    <label for="ModalMode" class="block text-sm font-medium text-gray-700">Mode</label>
+                                                    <select id="ModalMode" name="Type" onchange="updateEmbedModal()" class="form-select mt-1 block w-full">
+                                                        <option></option>
+                                                        <option value="viewonly">View Only</option>
+                                                        <option value="resultonly">Result Only</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div style="clear: both; display: block; height: 0px;"></div></div>
 
 <div class="foot show-embed border-t-1 py-2 text-center text-gray-500" style="margin-top:12rem">
     <div>
@@ -882,21 +955,22 @@ function showEmbed(r) {
     $embed.innerHTML = `
         <span data-click="toggleFullscreen" 
               class="absolute hide-loading inline-block cursor-pointer" style="background:#f7f7f7; margin:.7rem 0 0 .25rem;z-index: 10">
-            <svg class="hide-fullscreen" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+            <svg class="w-5.5 h-5.5 hide-fullscreen" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
                 <title>Maximize</title>
                 <g><path d="M0,0h24v24H0V0z" fill="none"/></g>
                 <g><path fill="#666" d="M6,16h12V8H6V16z M8,10h8v4H8V10z M4,15H2v3c0,1.1,0.9,2,2,2h3v-2H4V15z M4,6h3V4H4C2.9,4,2,4.9,2,6v3h2V6z M20,4h-3v2h3v3 h2V6C22,4.9,21.1,4,20,4z M20,18h-3v2h3c1.1,0,2-0.9,2-2v-3h-2V18z"/></g>
             </svg>
-            <svg class="show-fullscreen" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
-                <title>Collapse</title>
+            <svg class="w-5.5 h-5.5 show-fullscreen" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                <title>Minimize</title>
                 <path d="M0 0h24v24H0V0z" fill="none"/><path fill="#666" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
             </svg>
         </span>
-        <a id="lnkNewWindow" class="absolute hide-loading inline-block hide-fullscreen text-gray-500" style="background:#f7f7f7;margin: .75rem 0 0 75.5rem" 
-           href="${embedSrc}" target="_blank" title="Open in new fullscreen window">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>                               
-        </a>
+        <div id="lnkEmbed" class="absolute hide-loading inline-block hide-fullscreen text-gray-500 cursor-pointer" title="Embed Source Code" data-click="showEmbedDialog">
+            <svg class="inline-block w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            <span class="inline-block">embed</span>
+        </div>
         <iframe id="iframe" class="h-embed w-full" src="${embedSrc}"></iframe>`;
+    updateEmbedModal();
     on('#iframe', {
         load: () => M.trigger(M.EVENTS.IFrameLoad)
     })
@@ -906,6 +980,33 @@ function onIFrameLoad() {
     if (LOG) console.log(`onIFrameLoad()`);
     M.restoreFromStateIfExists();
     endLoading('#embed-loading');
+}
+
+function copyEmbedSource(){
+    let $txt = $('#ModalIFrame');
+    $txt.select();
+    document.execCommand("copy");
+    let $btn = $('#ModalCopy');
+    $btn.innerHTML = "Copied!";
+    setTimeout(() => $btn.innerHTML = "Copy", 3000);
+}
+
+function updateEmbedModal() {
+    if (!M.slug || !M.lang) return;
+    
+    let url = M.getIFrameSrc();
+    
+    let height = $("#ModalHeight").value || '750';
+    let opt = {};
+
+    //&title=Test&show=MyApp.csproj&mode=viewonly
+    let title = $('#ModalTitle').value;
+    if (title) opt.title = title;
+    let mode = $('#ModalMode').value;
+    if (mode) opt.mode = mode;
+    url = appendQueryString(url,opt);
+
+    $('#ModalIFrame').innerText = `<iframe src="${url}" frameborder="0" style="height:${height}px;width:100%;border:1px solid #ddd"></iframe>`;
 }
 
 function selectUrl() {
@@ -1185,8 +1286,9 @@ function applyForm(form,cache) {
     if ($iframe) {
         let iframeSrc = M.getIFrameSrc();
         setLoading('#embed-loading');
-        $('#lnkNewWindow').href = $iframe.src = iframeSrc;
+        $iframe.src = iframeSrc;
     } else if (LOG) console.log(`WARN applyForm(): #iframe not exists`);
+    updateEmbedModal();
     return false;
 }
 
@@ -1211,7 +1313,7 @@ function getArgs(obj, request, meta) {
 }
 
 function updateDownload() {
-    let $includeDtos = $('#includeDtos'), $lblProject = $('#lblProject'), $zip = $('#zip');
+    let $includeDtos = $('#includeDtos'), $lblProject = $('#lblProject'), $zip = $('#zip'), $mixLabel = $('#mix label');
     if (!M.slug || !M.lang) {
         $includeDtos.innerHTML = $lblProject.innerHTML = $zip.href= '';
         return;
@@ -1252,6 +1354,8 @@ function updateDownload() {
     $includeDtos.innerHTML = includeHtml;
     $lblProject.innerHTML = `${projectName}.zip`;
     $zip.href = archiveUrl(M.getGistUrl(), projectName);
+    
+    $mixLabel.innerHTML = `x mix -preserve -name ${projectName} ${encodeURI(M.getGistUrl())}`;
     if (LOG) console.log(`updateDownload(): ${M.getGistUrl()}`);
 }
 
@@ -1408,12 +1512,18 @@ function selectTab(tab,tabs) {
         }
     });
 }
+function showEmbedDialog() {
+    $('#embed-modal').classList.add('active');
+}
+function hideEmbedDialog() {
+    $('#embed-modal').classList.remove('active');
+}
 
 function init() {
     let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, 
-          htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart } = exports;
+          htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart, appendQueryString } = exports;
     Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, 
-        JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart });
+        JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart, appendQueryString });
     client = new JsonServiceClient();
     client.exceptionFilter = (res,err) => {
         setError(err.responseStatus || err, res.statusText || res.status);
@@ -1448,7 +1558,9 @@ function init() {
         },
         selectTab: function () {
             selectTab(this.getAttribute('data-tab'), this.closest('tabs'));
-        }
+        },
+        showEmbedDialog: showEmbedDialog,
+        hideEmbedDialog: hideEmbedDialog
     });
     on('#txtRequest', {
         'awesomplete-select': function (evt) {
