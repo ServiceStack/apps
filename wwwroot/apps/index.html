@@ -15,7 +15,7 @@ a { color: #007bff }
 .invalid-feedback::before{content:"\2718"}
 .is-invalid::after{content:"\2718"}
 
-.hide-enabled,.loading,.show-loading,.show-error,.show-embed,.show-auth,.show-fullscreen,.modal {display:none}
+.hide-enabled,.loading,.show-loading,.show-error,.show-meta,.show-embed,.show-auth,.show-fullscreen,.modal {display:none}
 .has-error .hide-error{display:none !important}
 
 .nourl .hide-enabled{display:block}
@@ -27,6 +27,7 @@ a { color: #007bff }
 .loading .show-loading.flex{display:flex}
 .loading .hide-loading{display:none}
 .has-embed .show-embed{display:block}
+.has-meta .show-meta{display:block}
 
 .fullscreen .hide-fullscreen {display:none}
 .fullscreen .show-fullscreen {display:block}
@@ -232,7 +233,7 @@ pre.copied i { opacity: .4; }
                            oninput="updateDownload()"
                            class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
                 </label>
-                <div id="customForm" class="mt-2 w-full">
+                <div id="customForm" class="show-meta mt-2 w-full">
                     <div class="shadow overflow-hidden sm:rounded">
                         <div class="px-4 py-5 bg-white sm:p-6">
                             <div id="includeDtos"></div>
@@ -639,6 +640,9 @@ let M = {
             cls.push('nourl');
         } else if (this.baseUrl && this.lang) {
             cls.push('has-embed');
+        }
+        if (this.meta) {
+            cls.push('has-meta');
         }
         if (this.lang) {
             cls.push(this.lang);
@@ -1320,7 +1324,7 @@ function getArgs(obj, request, meta) {
 
 function updateDownload() {
     let $includeDtos = $('#includeDtos'), $lblProject = $('#lblProject'), $zip = $('#zip'), $mixLabel = $('#mix label');
-    if (!M.slug || !M.lang) {
+    if (!M.slug || !M.lang || !M.meta) {
         $includeDtos.innerHTML = $lblProject.innerHTML = $zip.href= '';
         return;
     }
