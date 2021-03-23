@@ -144,7 +144,8 @@ pre.copied i { opacity: .4; }
         <div class="text-center">
             <div class="error-summary invalid-feedback my-1"></div>
             <small class="text-base text-gray-400 hide-fullscreen">
-                try <a href="#techstacks.io">techstacks.io</a>
+                try <a href="#techstacks.io">techstacks.io</a>,
+                <a href="#northwind.netcore.io">northwind.netcore.io</a>
             </small>
         </div>
     </form>
@@ -483,7 +484,7 @@ let M = {
         if (scheme === this.scheme && baseUrl === this.baseUrl) return;
 
         this.scheme = scheme || 'https';
-        this.baseUrl = baseUrl || '';
+        this.baseUrl = trimEnd(baseUrl || '','/');
         if (this.baseUrl.indexOf('://') >= 0) {
             this.scheme = leftPart(this.baseUrl,'://');
             this.baseUrl = rightPart(this.baseUrl,'://');
@@ -793,18 +794,25 @@ function urlFromSlug(slug) {
 
     let firstPos = url.indexOf(':');
     if (!isUrl && firstPos >= 0) {
-        let atPort = rightPart(url,':');
-        let delim1Pos = atPort.indexOf(':');
-        let delim2Pos = atPort.indexOf('/');
-        let endPos = delim1Pos >= 0 && delim2Pos >= 0
-            ? Math.min(delim1Pos, delim2Pos)
-            : Math.max(delim1Pos, delim2Pos);
-        let testPort = endPos >= 0
-            ? atPort.substring(0,endPos)
-            : atPort.substring(0,atPort.length - 1);
-        url = isInteger(testPort)
-            ? leftPart(url,':') + ':' + unSlash(atPort)
-            : leftPart(url,':') + '/' + unSlash(atPort);
+        let isColonPos = indexOfAny(url,[':', '/', '(']);
+        if (isColonPos >= 0 && url[isColonPos] === ':') {
+            let atPort = rightPart(url,':');
+            if (atPort.length > 0) {
+                let delim1Pos = atPort.indexOf(':');
+                let delim2Pos = atPort.indexOf('/');
+                let endPos = delim1Pos >= 0 && delim2Pos >= 0
+                    ? Math.min(delim1Pos, delim2Pos)
+                    : Math.max(delim1Pos, delim2Pos);
+                let testPort = endPos >= 0
+                    ? atPort.substring(0,endPos)
+                    : atPort.substring(0,atPort.length - 1);
+                url = isInteger(testPort)
+                    ? leftPart(url,':') + ':' + unSlash(atPort)
+                    : leftPart(url,':') + '/' + unSlash(atPort);
+            } else {
+                url = leftPart(url,':') + '/' + unSlash(atPort);
+            }
+        }
     }
     url = decodeURIComponent(url);
     if (!isUrl) {
@@ -1531,9 +1539,9 @@ function hideEmbedDialog() {
 }
 
 function init() {
-    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, 
+    let { bindHandlers, leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, JSV, indexOfAny, 
           htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart, appendQueryString } = exports;
-    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, 
+    Object.assign(window, { leftPart, rightPart, JsonServiceClient, GistRef, SiteMeta, humanize, enc, StringBuffer, indexOfAny, 
         JSV, htmlAttrs, serializeToObject, combinePaths, trimEnd, uniq, flatMap, lastLeftPart, lastRightPart, appendQueryString });
     client = new JsonServiceClient();
     client.exceptionFilter = (res,err) => {
