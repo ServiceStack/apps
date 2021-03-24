@@ -129,7 +129,11 @@ namespace Apps.ServiceInterface
         public void RemoveSite(string slug)
         {
             var useBaseUrl = SiteUtils.UrlFromSlug(slug);
-            Map.TryRemove(useBaseUrl, out _);
+            if (!Map.TryRemove(useBaseUrl, out _))
+            {
+                var site = FindSite(slug);
+                Map.TryRemove(site.BaseUrl, out _);
+            }
         }
 
         public async Task<SiteInfo> GetSiteAsync(string slug)
