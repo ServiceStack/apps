@@ -490,6 +490,9 @@ let M = {
             this.baseUrl = rightPart(this.baseUrl,'://');
         }
         this.slug = this.baseUrl ? urlToSlug(this.baseUrl) : null;
+        if (!this.lang) {
+            this.lang = localStorage.getItem('lang:active') || 'csharp';
+        }
         this.reset();
         this.loadSiteMeta();
         this.syncClasses();
