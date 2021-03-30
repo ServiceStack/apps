@@ -57,6 +57,9 @@ var client = new JsonServiceClient(""{BASE_URL}"");{REQUIRES_AUTH}
 
         public override string Value(string typeName, string value) => typeName switch {
             nameof(Double) => Float(value),
+            nameof(Int64) => value + "L",
+            nameof(UInt32) => value + "u",
+            nameof(UInt64) => value + "ul",
             nameof(Single) => Float(value) + "f",
             nameof(Decimal) => Float(value) + "m",
             _ => value
