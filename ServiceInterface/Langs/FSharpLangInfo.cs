@@ -48,7 +48,7 @@ module Program =
 
         let client = new JsonServiceClient(""{BASE_URL}""){REQUIRES_AUTH}
 
-        let response = client.Send(new {REQUEST}({REQUEST_BODY}))
+        {API_COMMENT}let response = client.Send(new {REQUEST}({REQUEST_BODY}))
 
         {API_COMMENT}response.PrintDump()
         {INSPECT_VARS}
