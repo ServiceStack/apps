@@ -34,7 +34,6 @@ zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists",
                 ["build.gradle.kts"] = @"plugins {
     java
-    maven
     application
     kotlin(""jvm"") version ""1.4.21""
 }
@@ -66,7 +65,7 @@ dependencies {
             InspectVarsResponse = "Inspect.vars(mapOf(\"response\" to response))";
             RequiresAuthTemplate = @"
     // Authentication is required
-    // client.post(new Authenticate().apply {
+    // client.post(Authenticate().apply {
     //     provider = ""credentials""
     //     userName = ""...""
     //     password = ""..."" })";

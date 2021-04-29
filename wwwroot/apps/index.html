@@ -91,6 +91,7 @@ pre.copied i { opacity: .4; }
     .text-3xl{font-size: 1rem;line-height: 1.5rem}
     .text-6xl { font-size: 1.875rem }
     .w-section,.w-container { width: 414px }
+    .video-hd { width: 414px; height: 233px }
 }
 @media (min-width: 768px) {
     .just-add { display:block }
@@ -98,6 +99,10 @@ pre.copied i { opacity: .4; }
     .text-3xl { font-size: 1.875rem;line-height: 2.25rem }
     .text-6xl { font-size: 3.75rem;line-height: 1 }
     .w-section,.w-container { width: 768px }
+    .video-hd { width: 768px; height: 432px }
+}
+@media (min-width: 1024px) {
+    .video-hd { width: 896px; height: 504px }
 }
 @media only screen and (min-width:900px) {
     .w-section,.w-container { width: 900px }
@@ -112,7 +117,7 @@ pre.copied i { opacity: .4; }
 <i hidden>{{ '/js/hot-fileloader.js' |> ifDebugIncludeScript }}</i>
 
 <div class="container flex flex-col place-items-center max-fullscreen">
-    <h1 class="mt-4 mb-1 text-6xl font-semibold text-center text-gray-700 hide-fullscreen">Instant Client Apps</h1>
+    <h1 class="mt-4 mb-1 text-6xl font-semibold text-center text-gray-700 hide-fullscreen"><a href="./" class="text-gray-700">Instant Client Apps</a></h1>
     <small class="just-add mt-1 mb-2 text-base text-gray-400 hide-fullscreen">just add</small>
 
     <form id="formUrl" class=" max-fullscreen">
@@ -195,6 +200,9 @@ pre.copied i { opacity: .4; }
             <a href="https://docs.servicestack.net/clients-overview">Generic Service Clients</a>
             use the native language DTOs to enable its productive end-to-end typed APIs.
         </p>
+        <div class="pt-8">
+            <iframe class="video-hd" src="https://www.youtube.com/embed/GTnuMhvUayg" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
     </div>
 
     <div id="error-summary" class="show-error w-section mt-8 bg-red-100 border-l-4 border-red-300 text-red-dark p-4" role="alert">
