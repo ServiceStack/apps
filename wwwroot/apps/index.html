@@ -224,7 +224,7 @@ pre.copied i { opacity: .4; }
                 <div id="tags" class="mt-2 flex" style="min-height:1.5rem"></div>
                 <label id="choose-api">
                     <input id="txtRequest" type="text" spellcheck="false" placeholder="Choose API"
-                           class="flex-grow border rounded-none mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
+                           class="flex-grow border rounded-none mt-1 py-2 px-3 text-grey-900 text-3xl">
                     <div id="btn-auth" class="show-auth absolute" style="margin: -2.5rem 0 0 -2.5rem; left:50%; z-index: 1">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
                             <title>Requires Authentication</title>
@@ -242,7 +242,7 @@ pre.copied i { opacity: .4; }
                            onkeypress="return isAlphaNumeric(event.charCode)"
                            onchange="this.value = this.value.replace(/[\W]+/g,'')"
                            oninput="updateDownload()"
-                           class="flex-grow border rounded-none mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
+                           class="flex-grow border rounded-none mt-1 py-2 px-3 text-grey-900 text-3xl">
                 </label>
                 <div id="customForm" class="show-meta mt-2 w-full">
                     <div class="shadow overflow-hidden sm:rounded">
@@ -1184,7 +1184,7 @@ function createInput(prop,info,meta) {
         id:prop.name,
         name:prop.name,
         type:'text',
-        'class':'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md',
+        'class':'mt-1',
         autocomplete:prop.name
     };
     if (info.elementType && isNumeric(info.elementType)) {
@@ -1228,7 +1228,7 @@ function createInput(prop,info,meta) {
                 : E.enumNames[i];
             sb.append(`<option value="${value}">${desc}</option>`);
         }
-        return `<select id="${prop.name}" name="${prop.name}" class="form-select mt-1 block w-full"><option></option>${sb.toString()}</select>`;
+        return `<select id="${prop.name}" name="${prop.name}" class="form-select mt-1"><option></option>${sb.toString()}</select>`;
     }
     return `<input ${htmlAttrs(attrs)}>`;
 }
@@ -1238,7 +1238,7 @@ function createControl(prop,info,meta,opt) {
         <div class="mt-4 space-y-4">
           <div class="flex items-start">
             <div class="flex items-center h-5">
-              <input id="${prop.name}" name="${prop.name}" type="checkbox" value="true" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+              <input id="${prop.name}" name="${prop.name}" type="checkbox" value="true" class="">
             </div>
             <div class="ml-3 text-sm">
               <label for="${prop.name}" class="font-medium text-gray-700">${humanize(prop.name)}</label>
@@ -1370,7 +1370,7 @@ function updateDownload() {
         let checked = x.checked === true ? ' checked' : '';
         sb.append(`<div class="flex items-center">
             <input id="${x.id}" name="include" value="${x.value}" ${checked} type="radio" onchange="M.setInclude('${x.value}')" 
-                   class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                   class="">
                 <label for="${x.id}" class="ml-3 block text-sm font-medium text-gray-700">${x.label}</label>
         </div>`);
     });
