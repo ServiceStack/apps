@@ -116,17 +116,17 @@ pre.copied i { opacity: .4; }
 <body class="m-0 font-sans bg-gray-50 nourl">
 <i hidden>{{ '/js/hot-fileloader.js' |> ifDebugIncludeScript }}</i>
 
-<div class="container flex flex-col place-items-center max-fullscreen">
+<div class="container mx-auto flex flex-col place-items-center max-fullscreen">
     <h1 class="mt-4 mb-1 text-6xl font-semibold text-center text-gray-700 hide-fullscreen"><a href="./" class="text-gray-700">Instant Client Apps</a></h1>
     <small class="just-add mt-1 mb-2 text-base text-gray-400 hide-fullscreen">just add</small>
 
-    <form id="formUrl" class=" max-fullscreen">
+    <form id="formUrl" class="max-fullscreen">
         <div class="w-section flex justify-between max-fullscreen">
-            <select id="scheme" class="border py-2 px-3 text-grey-900 text-3xl shadow bg-none">
+            <select id="scheme" class="border rounded-none py-2 px-3 text-grey-900 text-3xl shadow bg-none w-auto">
                 <option value="https">https://</option>
                 <option value="http">http://</option>
             </select>
-            <input id="baseUrl" class="flex-grow border py-2 px-3 text-grey-900 text-3xl shadow" type="text" placeholder="ServiceStack Base URL">
+            <input id="baseUrl" class="flex-grow border rounded-none py-2 px-3 text-grey-900 text-3xl shadow" type="text" placeholder="ServiceStack Base URL">
             <select id="selLang" class="show-fullscreen border py-2 px-3 text-grey-900 text-3xl shadow bg-none">
                 <option value="csharp">C#</option>
                 <option value="typescript">Node.js</option>
@@ -224,7 +224,7 @@ pre.copied i { opacity: .4; }
                 <div id="tags" class="mt-2 flex" style="min-height:1.5rem"></div>
                 <label id="choose-api">
                     <input id="txtRequest" type="text" spellcheck="false" placeholder="Choose API"
-                           class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
+                           class="flex-grow border rounded-none mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
                     <div id="btn-auth" class="show-auth absolute" style="margin: -2.5rem 0 0 -2.5rem; left:50%; z-index: 1">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6">
                             <title>Requires Authentication</title>
@@ -242,7 +242,7 @@ pre.copied i { opacity: .4; }
                            onkeypress="return isAlphaNumeric(event.charCode)"
                            onchange="this.value = this.value.replace(/[\W]+/g,'')"
                            oninput="updateDownload()"
-                           class="flex-grow border mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
+                           class="flex-grow border rounded-none mt-1 py-2 px-3 text-grey-900 text-3xl shadow w-full">
                 </label>
                 <div id="customForm" class="show-meta mt-2 w-full">
                     <div class="shadow overflow-hidden sm:rounded">
