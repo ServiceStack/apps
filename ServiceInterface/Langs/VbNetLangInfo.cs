@@ -66,7 +66,7 @@ End Module
 
         public override string Value(string typeName, string value) => typeName switch {
             // nameof(Char) => $"\"{value}\"C",
-            nameof(Int64) => value + "L",
+
             nameof(Double) => Float(value),
             nameof(Single) => Float(value) + "F",
             nameof(Decimal) => Float(value) + "D",
