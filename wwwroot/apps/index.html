@@ -38,7 +38,7 @@ a { color: #007bff }
 .modal.active {display:block}
 
 [data-use] { display: none; cursor: pointer }
-.csharp .show-csharp,.typescript .show-typescript,.dart .show-dart,.java .show-java,.kotlin .show-kotlin,.swift .show-swift,.vbnet .show-vbnet,.fsharp .show-fsharp
+.csharp .show-csharp,.typescript .show-typescript.python .show-python,.dart .show-dart,.java .show-java,.kotlin .show-kotlin,.swift .show-swift,.vbnet .show-vbnet,.fsharp .show-fsharp
 { display: flex }
 
 .nourl .lang {filter:grayscale(100%);opacity:.5;box-shadow:none;cursor:default}
@@ -130,6 +130,7 @@ pre.copied i { opacity: .4; }
             <select id="selLang" class="show-fullscreen border py-2 px-3 text-grey-900 text-3xl shadow bg-none">
                 <option value="csharp">C#</option>
                 <option value="typescript">Node.js</option>
+                <option value="python">Python</option>
                 <option value="dart">Dart</option>
                 <option value="java">Java</option>
                 <option value="kotlin">Kotlin</option>
@@ -159,35 +160,39 @@ pre.copied i { opacity: .4; }
 
     <div class="flex justify-evenly langs m-4 pb-6 w-container hide-fullscreen">
         <span data-lang="csharp" class="lang project shadow-lg rounded-full cursor-pointer" title="C#" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/csharp.svg" alt="C# logo">
+            <img class="w-20 h-20" src="/assets/img/csharp.svg" alt="C# logo">
         </span>
 
-        <span data-lang="typescript" class="lang project hell shadow-lg rounded-full cursor-pointer" title="Node.js TypeScript" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/typescript.svg" alt="Node.js logo">
+        <span data-lang="typescript" class="lang project shadow-lg rounded-full cursor-pointer" title="Node.js TypeScript" data-click="selectLang">
+            <img class="w-20 h-20" src="/assets/img/typescript.svg" alt="Node.js logo">
+        </span>
+
+        <span data-lang="python" class="lang project shadow-lg rounded-full cursor-pointer" title="Python" data-click="selectLang">
+            <img class="w-20 h-20" src="/assets/img/python.svg" alt="Python logo">
         </span>
 
         <span data-lang="dart" class="lang shadow-lg rounded-full cursor-pointer" title="Dart" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/dart.svg" alt="Dart logo">
+            <img class="w-20 h-20" src="/assets/img/dart.svg" alt="Dart logo">
         </span>
 
         <span data-lang="java" class="lang shadow-lg rounded-full cursor-pointer" title="Java" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/java.svg" alt="Java logo">
+            <img class="w-20 h-20" src="/assets/img/java.svg" alt="Java logo">
         </span>
 
         <span data-lang="kotlin" class="lang shadow-lg rounded-full cursor-pointer" title="Kotlin" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/kotlin.svg" alt="Kotlin logo">
+            <img class="w-20 h-20" src="/assets/img/kotlin.svg" alt="Kotlin logo">
         </span>
 
         <span data-lang="swift" class="lang shadow-lg rounded-full cursor-pointer" title="Swift" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/swift.svg" alt="Swift logo">
+            <img class="w-20 h-20" src="/assets/img/swift.svg" alt="Swift logo">
         </span>
 
         <span data-lang="vbnet" class="lang project shadow-lg rounded-full cursor-pointer" title="VB" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/vb.svg" alt="VB.NET logo">
+            <img class="w-20 h-20" src="/assets/img/vb.svg" alt="VB.NET logo">
         </span>
 
         <span data-lang="fsharp" class="lang shadow-lg rounded-full cursor-pointer" title="F#" data-click="selectLang">
-            <img class="w-25 h-25" src="/assets/img/fsharp.svg" alt="F# logo">
+            <img class="w-20 h-20" src="/assets/img/fsharp.svg" alt="F# logo">
         </span>
     </div>
     
@@ -288,6 +293,10 @@ pre.copied i { opacity: .4; }
                                 <div data-use="webstorm" data-click="openWith" class="flex flex-col items-center text-center show-typescript show-dart">
                                     <img class="w-10 h-10" src="/assets/img/webstorm.svg" alt="Visual Studio Icon">
                                     <span class="text-gray-500">WebStorm</span>
+                                </div>
+                                <div data-use="pycharm" data-click="openWith" class="flex flex-col items-center text-center show-typescript show-python">
+                                    <img class="w-10 h-10" src="/assets/img/pycharm.svg" alt="PyCharm Icon">
+                                    <span class="text-gray-500">PyCharm</span>
                                 </div>
                                 <div data-use="studio" data-click="openWith" class="flex flex-col items-center text-center show-dart show-java show-kotlin">
                                     <img class="w-10 h-10" src="/assets/img/androidstudio.svg" alt="Android Studio Icon">
@@ -462,7 +471,7 @@ pre.copied i { opacity: .4; }
 let LOG = location.search.indexOf('log=1') >= 0 || location.origin.startsWith("https://localhost");
 /** @type {JsonServiceClient} */
 let client = null;
-let LANGS = ['csharp','typescript','dart','java','kotlin','swift','vbnet','fsharp'];
+let LANGS = ['csharp','typescript','python','dart','java','kotlin','swift','vbnet','fsharp'];
 let M = {
     EVENTS: {
         UrlChange: 'url:change',

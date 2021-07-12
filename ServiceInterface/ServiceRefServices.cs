@@ -16,6 +16,7 @@ namespace Apps.ServiceInterface
 
         private static LangInfo CSharp = new CSharpLangInfo();
         private static LangInfo TypeScript = new TypeScriptLangInfo();
+        private static LangInfo Python = new PythonLangInfo();
         private static LangInfo Swift = new SwiftLangInfo();
         private static LangInfo Java = new JavaLangInfo();
         private static LangInfo Kotlin = new KotlinLangInfo();
@@ -26,6 +27,8 @@ namespace Apps.ServiceInterface
         private static Dictionary<string, LangInfo> LangAliases { get; set; } = new() {
             ["csharp"] = CSharp,
             ["cs"] = CSharp,
+            ["python"] = Python,
+            ["py"] = Python,
             ["typescript"] = TypeScript,
             ["ts"] = TypeScript,
             ["swift"] = Swift,
