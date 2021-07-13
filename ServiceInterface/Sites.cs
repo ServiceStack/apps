@@ -46,9 +46,9 @@ namespace Apps.ServiceInterface
                     .GetStringFromUrlAsync(requestFilter:req => req.UserAgent = "apps.servicestack.net");
                 return new LanguageInfo(this, lang, langTypesUrl, content);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                throw ex;
             }
         }
 
@@ -114,6 +114,7 @@ namespace Apps.ServiceInterface
         public static string[] Languages = {
             "typescript",
             "csharp",
+            "python",
             "dart",
             "java",
             "kotlin",
