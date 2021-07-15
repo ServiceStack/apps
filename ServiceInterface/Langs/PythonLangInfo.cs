@@ -18,7 +18,7 @@ namespace Apps.ServiceInterface.Langs
             LineComment = "#";
             DtosPathPrefix = "my_app\\";
             Files = new Dictionary<string, string> {
-                ["requirements.txt"] = @"servicestack>=0.0.5",
+                ["requirements.txt"] = @"servicestack>=0.0.6",
                 ["setup.py"] = @"from setuptools import setup, find_packages
 
 setup(
