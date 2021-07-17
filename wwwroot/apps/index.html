@@ -31,7 +31,7 @@ a { color: #007bff }
 
 .fullscreen .hide-fullscreen {display:none}
 .fullscreen .show-fullscreen {display:block}
-.fullscreen .max-fullscreen {width:100%}
+.fullscreen .max-fullscreen {width:100%;max-width:unset}
 .fullscreen #btn-clear,.fullscreen .btn-help {position:absolute;right:125px}
 .fullscreen #formUrl {margin:0}
 .fullscreen #customize-embed {padding:0 .5rem}
@@ -127,7 +127,7 @@ pre.copied i { opacity: .4; }
                 <option value="http">http://</option>
             </select>
             <input id="baseUrl" class="flex-grow border rounded-none py-2 px-3 text-grey-900 text-3xl shadow" type="text" placeholder="ServiceStack Base URL">
-            <select id="selLang" class="show-fullscreen border py-2 px-3 text-grey-900 text-3xl shadow bg-none">
+            <select id="selLang" class="show-fullscreen border rounded-none py-2 px-3 text-grey-900 text-3xl shadow bg-none" style="max-width:125px">
                 <option value="csharp">C#</option>
                 <option value="typescript">Node.js</option>
                 <option value="python">Python</option>
@@ -727,7 +727,10 @@ let M = {
         return { title: `${this.slug} ${this.lang}`, url: hash };
     },
     toggleFullscreen() {
-        this.fullscreen = !this.fullscreen;
+        this.setFullscreen(!this.fullscreen);
+    },
+    setFullscreen(value) {
+        this.fullscreen = value;
         localStorage.setItem('fullscreen', this.fullscreen ? 'true' : 'false');
         this.syncClasses();
     },
@@ -1075,6 +1078,7 @@ on('#btn-clear div', {
         M.setUrl($scheme.value, '');
         $scheme.value = M.scheme;
         $baseUrl.value = M.baseUrl;
+        M.setFullscreen(false);
     }
 })
 
