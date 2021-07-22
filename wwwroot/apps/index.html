@@ -76,10 +76,14 @@ pre.copy i:hover { opacity: .6; }
 pre.copied b { display: inline-block; }
 pre.copied i { opacity: .4; }
 
-#mix pre { max-width:550px }
-.fullscreen #mix pre { margin: -10px 0 0 0 }
-.fullscreen #mix pre { position: absolute; max-width:46% }
-.fullscreen #mix p { margin: 0 0 30px 0 }
+.cmd pre { max-width:550px }
+.fullscreen .cmd pre { margin: -10px 0 0 0 }
+.fullscreen .cmd pre { position: absolute; max-width:46% }
+.fullscreen .cmd p { margin: 0 0 30px 0 }
+
+.full-cmd pre { max-width:1200px }
+.fullscreen .full-cmd { padding:.5% }
+.fullscreen .full-cmd pre { max-width:99%; }
 
 #lnkEmbed { margin: .5rem 0 0 75.5rem }
 #lnkEmbed span { visibility: hidden }
@@ -252,19 +256,24 @@ pre.copied i { opacity: .4; }
                 <div id="customForm" class="show-meta mt-2 w-full">
                     <div class="shadow overflow-hidden sm:rounded">
                         <div class="px-4 py-5 bg-white sm:p-6">
+
                             <div id="includeDtos"></div>
-                            
+
                             <h3 class="uppercase my-4 text-base font-medium text-gray-900">Download</h3>
                             <div class="flex justify-center">
                                 <a id="zip" href="#">
-                                    <svg class="w-10 h-10 inline-block mb-2" xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none">
+                                    <svg class="w-12 h-12 inline-block mb-2" xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none">
                                         <path fill="currentColor" d="M9.49094 4.40235C9.1153 4.14129 8.66749 4 8.20693 4H4.25L4.09595 4.00519C2.92516 4.08436 2 5.05914 2 6.25V17.75L2.00519 17.904C2.08436 19.0748 3.05914 20 4.25 20H19.75L19.904 19.9948C21.0748 19.9156 22 18.9409 22 17.75V8.75L21.9948 8.59595L21.9785 8.43788C21.8266 7.34297 20.8867 6.5 19.75 6.5H12.022L9.64734 4.5215L9.49094 4.40235ZM13.4967 8V10.2451C13.4967 10.6593 13.8325 10.9951 14.2467 10.9951H14.9967V11.9976H14.7467C14.3325 11.9976 13.9967 12.3334 13.9967 12.7476C13.9967 13.1618 14.3325 13.4976 14.7467 13.4976H14.9967V14.9976H14.7467C14.3325 14.9976 13.9967 15.3334 13.9967 15.7476C13.9967 16.1618 14.3325 16.4976 14.7467 16.4976H14.9967V18.5H4.25L4.14823 18.4932C3.78215 18.4435 3.5 18.1297 3.5 17.75V10.499L8.20693 10.5L8.40335 10.4914C8.85906 10.4515 9.29353 10.2733 9.64734 9.9785L12.021 8H13.4967ZM16.4967 18.0004H16.7467C17.1609 18.0004 17.4967 17.6646 17.4967 17.2504C17.4967 16.8362 17.1609 16.5004 16.7467 16.5004H16.4967V15.0004H16.7467C17.1609 15.0004 17.4967 14.6646 17.4967 14.2504C17.4967 13.8362 17.1609 13.5004 16.7467 13.5004H16.4967V10.9951H17.2467C17.6609 10.9951 17.9967 10.6593 17.9967 10.2451V8H19.75L19.8518 8.00685C20.2178 8.05651 20.5 8.3703 20.5 8.75V17.75L20.4932 17.8518C20.4435 18.2178 20.1297 18.5 19.75 18.5H16.4967V18.0004ZM16.4967 8V9.49513L14.9967 9.49513V8H16.4967ZM4.25 5.5H8.20693L8.31129 5.5073C8.44893 5.52664 8.57923 5.58398 8.68706 5.67383L10.578 7.249L8.68706 8.82617L8.60221 8.88738C8.4841 8.96063 8.34729 9 8.20693 9L3.5 8.999V6.25L3.50685 6.14823C3.55651 5.78215 3.8703 5.5 4.25 5.5Z"/>
                                     </svg><span id="lblProject" class="ml-1 text-2xl inline-block">MyApp</span>
                                 </a>
+                                <a id="notebook" href="#">
+                                    <img class="w-12 h-12 inline-block mb-2 ml-8" src="/assets/img/jupyter.svg" alt="Jupyter Notebook Logo">
+                                    <span class="ml-1 text-2xl inline-block">Notebook</span>
+                                </a>
                             </div>
 
-                            <h3 class="uppercase my-4 text-base font-medium text-gray-900">Mix into Directory</h3>
-                            <div id="mix" class="">
+                            <div id="mix" class="cmd">
+                                <h3 class="my-4 text-base font-medium text-gray-900">Mix into Directory</h3>
                                 <pre class="sh copy flex">
                                     <label class="flex-shrink overflow-hidden"></label>
                                     <b class="flex-shrink-0"></b><i class="svg-copy flex-shrink-0" title="copy" onclick="copy(this)"></i>
@@ -397,6 +406,35 @@ pre.copied i { opacity: .4; }
                 </div>
             </div>
         </div>
+
+        <div id="invoke" class="cmd full-cmd">
+            <h3 class="mb-4 text-base font-medium text-gray-900">
+                Invoke API from command line
+                <a href="https://docs.servicestack.net/post-command" title="Learn how to use Post Command">
+                    <svg class="w-5 h-5 inline-block mb-1"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </a>
+            </h3>
+            <pre class="sh copy flex">
+                <label class="flex-shrink overflow-hidden"></label>
+                <b class="flex-shrink-0"></b><i class="svg-copy flex-shrink-0" title="copy" onclick="copy(this)"></i>
+            </pre>
+        </div>
+
+        <div id="jupyter" class="cmd full-cmd">
+            <h3 class="mb-4 text-base font-medium text-gray-900">
+                Generate Jupyter Notebook
+                <a href="https://docs.servicestack.net/jupyter-notebooks" title="Learn how to use Jupyter Notebooks">
+                    <svg class="w-5 h-5 inline-block mb-1"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </a>
+            </h3>
+            <pre class="sh copy flex">
+                <label class="flex-shrink overflow-hidden"></label>
+                <b class="flex-shrink-0"></b><i class="svg-copy flex-shrink-0" title="copy" onclick="copy(this)"></i>
+            </pre>
+        </div>
+        
     </div>
 </div>
 
@@ -701,6 +739,12 @@ let M = {
                 : url;
         }
         return url;
+    },
+    getArgsAsJsObjectLiteral() {
+        let opName = this.getOpName();
+        if (!opName) return '';
+        let formState = this.getFormState();
+        return getArgsAsJsObject(formState, this.op.request, this.meta);
     },
     getIFrameSrc() {
         let url = this.getGistUrl();
@@ -1335,7 +1379,29 @@ function applyForm(form,cache) {
     updateEmbedModal();
     return false;
 }
-
+function getArgsAsJsObject(obj, request, meta) {
+    if (obj == null || Object.keys(obj).length === 0) return '';
+    let args = new StringBuffer();
+    let props = typeProperties(meta,request);
+    props.forEach(prop => {
+        let value = obj[prop.name];
+        if (!value) return;
+        value = trimEnd(value.trim(),',');
+        let info = typeInfo(meta,prop);
+        if (args.getLength() > 0)
+            args.append(',');
+        args.append(prop.name);
+        args.append(':');
+        if (info.elementType)
+            args.append(`[${value}]`);
+        else if (info.isNumeric || info.isBoolean)
+            args.append(value);
+        else
+            args.append(JSON.stringify(value));
+    });
+    let argsBody = args.toString();
+    return argsBody ? '{' + args.toString().replace(/"/g,"'") + '}' : '';
+}
 function getArgs(obj, request, meta) {
     let args = new StringBuffer();
     let props = typeProperties(meta,request);
@@ -1357,7 +1423,8 @@ function getArgs(obj, request, meta) {
 }
 
 function updateDownload() {
-    let $includeDtos = $('#includeDtos'), $lblProject = $('#lblProject'), $zip = $('#zip'), $mixLabel = $('#mix label');
+    let $includeDtos = $('#includeDtos'), $lblProject = $('#lblProject'), $zip = $('#zip'), $notebook = $('#notebook'),
+        $mixLabel = $('#mix label'), $invokeLabel = $('#invoke label'), $jupyterLabel = $('#jupyter label');
     if (!M.slug || !M.lang || !M.meta) {
         $includeDtos.innerHTML = $lblProject.innerHTML = $zip.href= '';
         return;
@@ -1400,7 +1467,18 @@ function updateDownload() {
     $zip.href = archiveUrl(M.getGistUrl(), projectName);
     
     let name = projectName !== 'MyApp' ? ` -name ${projectName}` : '';
-    $mixLabel.title = $mixLabel.innerHTML = `x mix -preserve${name} ${encodeURI(M.getGistUrl())}`;
+    let hasOp = !!M.getOpName();
+    $notebook.style.display = $('#mix').style.display = $('#invoke').style.display = $('#jupyter').style.display = hasOp ? 'block' : 'none';
+    if (hasOp) {
+        $mixLabel.title = $mixLabel.innerHTML = `x mix -preserve${name} ${encodeURI(M.getGistUrl())}`;
+        let argsBody = M.getArgsAsJsObjectLiteral();
+        let quotedArgsBody = argsBody ? ' "' + argsBody + '"' : '';
+        $invokeLabel.title = $invokeLabel.innerHTML = `x send ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}`;
+        $jupyterLabel.title = $jupyterLabel.innerHTML = `x jupyter ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}`;
+
+        let args = argsBody ? encodeURIComponent(argsBody) : '';
+        $notebook.href = `/notebook/${M.slug}/${M.getOpName()}?Args=${args}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+    }
     if (LOG) console.log(`updateDownload(): ${M.getGistUrl()}`);
 }
 
