@@ -1479,7 +1479,7 @@ function updateDownload() {
         $jupyterLabel.title = $jupyterLabel.innerHTML = `x jupyter ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}`;
 
         let args = argsBody ? encodeURIComponent(argsBody) : '';
-        $notebook.href = `/notebook/${M.slug}/${M.getOpName()}?Args=${args}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+        $notebook.href = `/json/reply/CreateNotebook?Slug=${M.slug}&Request=${M.getOpName()}&Args=${args}&Name=${projectName === 'MyApp' ? '' : projectName}`;
     }
     if (LOG) console.log(`updateDownload(): ${M.getGistUrl()}`);
 }

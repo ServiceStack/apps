@@ -2,6 +2,7 @@ using ServiceStack;
 
 namespace Apps.ServiceModel
 {
+    [Route("/notebook")]
     [Route("/notebook/{Slug}/{Request}")]
     public class CreateNotebook
     {
