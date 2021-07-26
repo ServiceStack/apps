@@ -14,45 +14,13 @@ namespace Apps.ServiceInterface
     {
         public Sites Sites { get; set; }
 
-        private static LangInfo CSharp = new CSharpLangInfo();
-        private static LangInfo TypeScript = new TypeScriptLangInfo();
-        private static LangInfo Python = new PythonLangInfo();
-        private static LangInfo Swift = new SwiftLangInfo();
-        private static LangInfo Java = new JavaLangInfo();
-        private static LangInfo Kotlin = new KotlinLangInfo();
-        private static LangInfo Dart = new DartLangInfo();
-        private static LangInfo FSharp = new FSharpLangInfo();
-        private static LangInfo VbNet = new VbNetLangInfo();
-        
-        private static Dictionary<string, LangInfo> LangAliases { get; set; } = new() {
-            ["csharp"] = CSharp,
-            ["cs"] = CSharp,
-            ["python"] = Python,
-            ["py"] = Python,
-            ["typescript"] = TypeScript,
-            ["ts"] = TypeScript,
-            ["swift"] = Swift,
-            ["sw"] = Swift,
-            ["java"] = Java,
-            ["ja"] = Java,
-            ["kotlin"] = Kotlin,
-            ["kt"] = Kotlin,
-            ["dart"] = Dart,
-            ["da"] = Dart,
-            ["fsharp"] = FSharp,
-            ["fs"] = FSharp,
-            ["vbnet"] = VbNet,
-            ["vb"] = VbNet,
-        };
-        
         public async Task<object> Get(GistRef request)
         {
             if (string.IsNullOrEmpty(request.Slug))
                 throw new ArgumentNullException(nameof(request.Slug));
             if (string.IsNullOrEmpty(request.Lang))
                 throw new ArgumentNullException(nameof(request.Lang));
-            if (!LangAliases.TryGetValue(request.Lang, out var lang))
-                throw UnknownLanguageError();
+            var lang = LangInfoUtils.AssertLangInfo(request.Lang);
             
             var includeTypes = string.IsNullOrEmpty(request.IncludeTypes)
                 ? null
@@ -216,8 +184,7 @@ namespace Apps.ServiceInterface
         {
             if (string.IsNullOrEmpty(request.Lang))
                 throw new ArgumentNullException(nameof(request.Lang));
-            if (!LangAliases.TryGetValue(request.Lang, out var lang))
-                throw UnknownLanguageError();
+            var lang = LangInfoUtils.AssertLangInfo(request.Lang);
 
             if (!lang.Files.TryGetValue(request.File, out var file))
                 throw HttpError.NotFound("File was not found");
@@ -225,8 +192,5 @@ namespace Apps.ServiceInterface
             Response.ContentType = MimeTypes.PlainText;
             return file;
         }
-
-        private static ArgumentException UnknownLanguageError() => 
-            new("Unknown Language, choose from: csharp, typescript, swift, java, kotlin, dart, fsharp or vbnet", nameof(GistRefFile.Lang));
     }
 }

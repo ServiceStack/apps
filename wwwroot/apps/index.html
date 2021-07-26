@@ -407,11 +407,11 @@ pre.copied i { opacity: .4; }
             </div>
         </div>
         
-        <div class="hide-loading">
-            <div id="invoke" class="cmd full-cmd">
+        <div class="hide-loading show-meta">
+            <div id="jupyter" class="cmd full-cmd">
                 <h3 class="mb-4 text-base font-medium text-gray-900">
-                    Invoke API from command line
-                    <a href="https://docs.servicestack.net/post-command" title="Learn how to use Post Command">
+                    Generate Jupyter Notebook
+                    <a href="https://docs.servicestack.net/jupyter-notebooks" title="Learn how to use Jupyter Notebooks">
                         <svg class="w-5 h-5 inline-block mb-1"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </a>
@@ -422,10 +422,10 @@ pre.copied i { opacity: .4; }
                 </pre>
             </div>
 
-            <div id="jupyter" class="cmd full-cmd">
+            <div id="invoke" class="cmd full-cmd">
                 <h3 class="mb-4 text-base font-medium text-gray-900">
-                    Generate Jupyter Notebook
-                    <a href="https://docs.servicestack.net/jupyter-notebooks" title="Learn how to use Jupyter Notebooks">
+                    Invoke API from command line
+                    <a href="https://docs.servicestack.net/post-command" title="Learn how to use Post Command">
                         <svg class="w-5 h-5 inline-block mb-1"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </a>
@@ -512,6 +512,17 @@ let LOG = location.search.indexOf('log=1') >= 0 || location.origin.startsWith("h
 /** @type {JsonServiceClient} */
 let client = null;
 let LANGS = ['csharp','typescript','python','dart','java','kotlin','swift','vbnet','fsharp'];
+let LANG_NAMES = {
+    csharp:'C#',
+    typescript:'TypeScript',
+    python:'Python',
+    dart:'Dart',
+    java:'Java',
+    kotlin:'Kotlin',
+    swift:'Swift',
+    vbnet:'VB.NET',
+    fsharp:'F#',
+};
 let M = {
     EVENTS: {
         UrlChange: 'url:change',
@@ -577,6 +588,9 @@ let M = {
         this.trigger(this.EVENTS.LangChange);
         this.updateHash();
         this.syncClasses();
+    },
+    getLangName() {
+        return this.lang && LANG_NAMES[this.lang];
     },
     setErrorStatus(status) {
         this.errorStatus = status;
@@ -1436,7 +1450,7 @@ function updateDownload() {
     let $selectedTag = $('#tags .active');
     if ($selectedTag) {
         let tag = $selectedTag.getAttribute('data-tag');
-        dtoOptions.push({ id:'includeTag', label: `Only ${tag} DTOs`, value: '{' + tag + '}.*' });
+        dtoOptions.push({ id:'includeTag', label: `Only ${tag} DTOs`, value: '{' + tag + '}' });
     }
     let $txtRequest = $('#txtRequest');
     if ($txtRequest.value) {
@@ -1470,16 +1484,35 @@ function updateDownload() {
     
     let name = projectName !== 'MyApp' ? ` -name ${projectName}` : '';
     let hasOp = !!M.getOpName();
-    $notebook.style.display = $('#mix').style.display = $('#invoke').style.display = $('#jupyter').style.display = hasOp ? 'block' : 'none';
+    $('#mix').style.display = $('#invoke').style.display = hasOp ? 'block' : 'none';
+    
+    let supportsJupyter = ['python','csharp','fsharp'].indexOf(M.lang) >= 0;
+    $("#notebook span").innerHTML = `${M.getLangName()} Notebook`;
+    $('#jupyter').style.display = $notebook.style.display = supportsJupyter ? 'block' : 'none';
     if (hasOp) {
         $mixLabel.title = $mixLabel.innerHTML = `x mix -preserve${name} ${encodeURI(M.getGistUrl())}`;
         let argsBody = M.getArgsAsJsObjectLiteral();
         let quotedArgsBody = argsBody ? ' "' + argsBody + '"' : '';
         $invokeLabel.title = $invokeLabel.innerHTML = `x send ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}`;
-        $jupyterLabel.title = $jupyterLabel.innerHTML = `x jupyter ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}`;
 
-        let args = argsBody ? encodeURIComponent(argsBody) : '';
-        $notebook.href = `/json/reply/CreateNotebook?Slug=${M.slug}&Request=${M.getOpName()}&Args=${args}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+        if (supportsJupyter) {
+            let include = selectedOption.value
+                ? ` -include "${selectedOption.value}"`
+                : '';
+            $jupyterLabel.title = $jupyterLabel.innerHTML = 
+                `x jupyter-${M.lang} ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}${include}`;
+
+            let args = argsBody ? encodeURIComponent(argsBody) : '';
+            $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Request=${M.getOpName()}&Args=${args}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+        }
+    } else {
+        if (supportsJupyter) {
+            let include = selectedOption.value && selectedOption.value !== '*'
+                ? ` -include "${selectedOption.value}"`
+                : '';
+            $jupyterLabel.title = $jupyterLabel.innerHTML = `x jupyter-${M.lang} ${M.scheme}://${M.baseUrl}${include}`;
+            $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+        }
     }
     if (LOG) console.log(`updateDownload(): ${M.getGistUrl()}`);
 }

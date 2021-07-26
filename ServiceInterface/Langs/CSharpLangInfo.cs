@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ServiceStack;
 using ServiceStack.NativeTypes.CSharp;
 
@@ -66,5 +67,81 @@ var client = new JsonServiceClient(""{BASE_URL}"");{REQUIRES_AUTH}
         };
 
         public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+        
+        public override JupyterNotebook CreateNotebook(SiteInfo site, string langContent, string requestDto, string requestArgs)
+        {
+            var dtosSource = $@"#r ""nuget:ServiceStack.Client""
+#r ""nuget:ServiceStack.Common""
+
+{langContent}
+
+var client = new JsonServiceClient(""{site.BaseUrl}"");
+";
+            var to = JupyterNotebook.CreateForCSharp();
+            to.Cells = new List<JupyterCell> {
+                CreateCodeCell(dtosSource),
+            };
+
+            if (requestDto != null)
+            {
+                var requestBody = "";
+                var args = ParseJsRequest(requestArgs);
+                var argKeys = args != null
+                    ? new HashSet<string>(args.Keys, StringComparer.OrdinalIgnoreCase)
+                    : new HashSet<string>();
+                if (args != null)
+                {
+                    var argsStringMap = args.ToStringDictionary();
+                    requestBody = RequestBody(requestDto, argsStringMap, site.Metadata.Api).TrimEnd(',');
+                }
+
+                var requestOp = site.Metadata.Api.Operations.FirstOrDefault(x => x.Request.Name == requestDto);
+                var clientMethod = (requestOp?.Actions?.FirstOrDefault() != null
+                    ? (requestOp.Actions.First().EqualsIgnoreCase("ANY")
+                        ? null
+                        : requestOp.Actions.First().ToPascalCase())
+                    : null) ?? "Send";
+                to.Cells.Add(CreateCodeCell($"var response = client.{clientMethod}(new {requestDto} {{{requestBody}}});"));
+                to.Cells.Add(CreateCodeCell("display(HTML(Inspect.htmlDump(response)));"));
+                var response = requestOp?.Response;
+                if (response?.Properties != null)
+                {
+                    var hasResults = response.Properties.FirstOrDefault(x => x.Name.EqualsIgnoreCase("Results")) != null;
+                    if (hasResults)
+                    {
+                        var resultsCell = CreateCodeCell("Inspect.printDumpTable(response.Results);");
+                        var baseClass = requestOp.Request.Inherits?.Name;
+                        if (baseClass != null && AutoQueryDtoNames.Contains(baseClass))
+                        {
+                            var responseModel = requestOp.Request.Inherits.GenericArgs.Last();
+                            var dataModel = site.Metadata.Api.Types.FirstOrDefault(x => x.Name == responseModel);
+                            if (dataModel != null)
+                            {
+                                if (argKeys.Contains("fields")) //Already specified fields in AutoQuery Request
+                                {
+                                    resultsCell = CreateCodeCell("Inspect.printDumpTable(response.Results);");
+                                }
+                                else
+                                {
+                                    var propNames = dataModel.Properties.Map(x => '"' + x.Name + '"');
+                                    resultsCell = CreateCodeCell(
+                                        $"Inspect.printDumpTable(response.Results,\n    headers:new[]{{{string.Join(",", propNames)}}})");
+                                }
+                            }
+                        }
+
+                        to.Cells.Add(resultsCell);
+                    }
+                }
+            }
+            else
+            {
+                to.Cells.Add(CreateCodeCell("# response = client.Send(new MyRequest {});"));
+                to.Cells.Add(CreateCodeCell("# display(HTML(Inspect.htmlDump(response)));"));
+            }
+
+            return to;
+        }
+        
     }
 }

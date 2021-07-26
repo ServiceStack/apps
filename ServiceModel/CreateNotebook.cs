@@ -3,13 +3,23 @@ using ServiceStack;
 namespace Apps.ServiceModel
 {
     [Route("/notebook")]
-    [Route("/notebook/{Slug}/{Request}")]
+    [Route("/notebook/{Lang}/{Slug}/{Request}")]
     public class CreateNotebook
     {
+        /// <summary>
+        /// Language code of notebook to create (default python)
+        /// </summary>
+        public string Lang { get; set; }
+
         /// <summary>
         /// Site BaseUrl Slug
         /// </summary>
         public string Slug { get; set; }
+ 
+        /// <summary>
+        /// The Type Pattern to include (if any)
+        /// </summary>
+        public string IncludeTypes { get; set; }
  
         /// <summary>
         /// Request DTO name
