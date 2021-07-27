@@ -178,7 +178,7 @@ namespace Apps.ServiceInterface
             ? throw new ArgumentNullException(nameof(SiteInfo.Slug))
             : await GetSiteAsync(slug) ?? throw HttpError.NotFound("Site does not exist");
         
-        private static char[] WildcardChars = {'*', ',', '{'};
+        private static readonly char[] WildcardChars = {'*', ',', '{'};
 
         public async Task<JupyterNotebook> CreateNotebookAsync(LangInfo lang, string slug, string includeTypes = null, string requestDto = null, string requestArgs = null)
         {

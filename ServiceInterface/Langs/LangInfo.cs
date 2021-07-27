@@ -245,6 +245,9 @@ namespace Apps.ServiceInterface.Langs
         public static JupyterCell CreateCodeCell(string src) => new() {
             CellType = "code",
             Source = ConvertToSourceLines(src),
+            Metadata = new Dictionary<string, string>(),
+            Outputs = new List<JupyterOutput>(),
+            ExecutionCount = 0,
         };
 
         public static List<string> ConvertToSourceLines(string src) => string.IsNullOrEmpty(src) 
