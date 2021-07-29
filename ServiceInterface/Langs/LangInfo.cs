@@ -387,7 +387,7 @@ namespace Apps.ServiceInterface.Langs
                     Name = "python",
                     NbconvertExporter = "python",
                     PygmentsLexer = "ipython3",
-                    Version = "3.9.6",
+                    Version = "3.7.8",
                 }
             },
             Nbformat = 4,

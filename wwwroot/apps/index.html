@@ -116,6 +116,7 @@ pre.copied i { opacity: .4; }
 <script>let exports = { __esModule:true }, module = { exports:exports }; function require(name) { return exports[name] || window[name] }</script>
 <script defer src="/assets/js/servicestack-client.js"></script>
 <script defer src="/assets/js/dtos.js"></script>
+<script src="https://apis.google.com/js/platform.js" async defer></script>
 </head>
 <body class="m-0 font-sans bg-gray-50 nourl">
 <i hidden>{{ '/js/hot-fileloader.js' |> ifDebugIncludeScript }}</i>
@@ -268,7 +269,8 @@ pre.copied i { opacity: .4; }
                                 </a>
                                 <a id="notebook" href="#">
                                     <img class="w-12 h-12 inline-block mb-2 ml-8" src="/assets/img/jupyter.svg" alt="Jupyter Notebook Logo">
-                                    <span class="ml-1 text-2xl inline-block">Notebook</span>
+                                    <span class="mx-1 text-2xl inline-block">Notebook</span>
+                                    <div class="inline-block align-text-bottom"><div id="savetodrive-div"></div></div>
                                 </a>
                             </div>
 
@@ -1448,8 +1450,8 @@ function updateDownload() {
     
     let dtoOptions = [{ id:'includeAll', label: 'All', value:'*' }];
     let $selectedTag = $('#tags .active');
+    let tag = $selectedTag && $selectedTag.getAttribute('data-tag');
     if ($selectedTag) {
-        let tag = $selectedTag.getAttribute('data-tag');
         dtoOptions.push({ id:'includeTag', label: `Only ${tag} DTOs`, value: '{' + tag + '}' });
     }
     let $txtRequest = $('#txtRequest');
@@ -1486,6 +1488,10 @@ function updateDownload() {
     let hasOp = !!M.getOpName();
     $('#mix').style.display = $('#invoke').style.display = hasOp ? 'block' : 'none';
     
+    function ext(name,ext) {
+        return name.endsWith(ext) ? name : name + ext;
+    }
+    
     let supportsJupyter = ['python','csharp','fsharp'].indexOf(M.lang) >= 0;
     $("#notebook span").innerHTML = `${M.getLangName()} Notebook`;
     $('#jupyter').style.display = $notebook.style.display = supportsJupyter ? 'block' : 'none';
@@ -1503,7 +1509,13 @@ function updateDownload() {
                 `x jupyter-${M.lang} ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}${include}`;
 
             let args = argsBody ? encodeURIComponent(argsBody) : '';
-            $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Request=${M.getOpName()}&Args=${args}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+            let name = projectName === 'MyApp' ? '' : projectName;
+            $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Request=${M.getOpName()}&Args=${args}&Name=${name}`;
+            gapi.savetodrive.render('savetodrive-div', {
+                src: $notebook.href,
+                filename: ext(name || `${M.slug}${tag ? '-' + tag : ''}-${M.getOpName()}`,'.ipynb'),
+                sitename: 'apps.servicestack.net'
+            });
         }
     } else {
         if (supportsJupyter) {
@@ -1512,6 +1524,11 @@ function updateDownload() {
                 : '';
             $jupyterLabel.title = $jupyterLabel.innerHTML = `x jupyter-${M.lang} ${M.scheme}://${M.baseUrl}${include}`;
             $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+            gapi.savetodrive.render('savetodrive-div', {
+                src: $notebook.href,
+                filename: ext(name || `${M.slug}${tag ? '-' + tag : ''}`,'.ipynb'),
+                sitename: 'apps.servicestack.net'
+            });
         }
     }
     if (LOG) console.log(`updateDownload(): ${M.getGistUrl()}`);
