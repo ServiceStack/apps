@@ -1484,7 +1484,7 @@ function updateDownload() {
     $lblProject.innerHTML = `${projectName}.zip`;
     $zip.href = archiveUrl(M.getGistUrl(), projectName);
     
-    let name = projectName !== 'MyApp' ? ` -name ${projectName}` : '';
+    let name = projectName !== 'MyApp' ? projectName : '';
     let hasOp = !!M.getOpName();
     $('#mix').style.display = $('#invoke').style.display = hasOp ? 'block' : 'none';
     
@@ -1496,7 +1496,7 @@ function updateDownload() {
     $("#notebook span").innerHTML = `${M.getLangName()} Notebook`;
     $('#jupyter').style.display = $notebook.style.display = supportsJupyter ? 'block' : 'none';
     if (hasOp) {
-        $mixLabel.title = $mixLabel.innerHTML = `x mix -preserve${name} ${encodeURI(M.getGistUrl())}`;
+        $mixLabel.title = $mixLabel.innerHTML = `x mix -preserve${name ? ' -name ' + name : ''} ${encodeURI(M.getGistUrl())}`;
         let argsBody = M.getArgsAsJsObjectLiteral();
         let quotedArgsBody = argsBody ? ' "' + argsBody + '"' : '';
         $invokeLabel.title = $invokeLabel.innerHTML = `x send ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}`;
@@ -1509,7 +1509,6 @@ function updateDownload() {
                 `x jupyter-${M.lang} ${M.scheme}://${M.baseUrl} ${M.getOpName()}${quotedArgsBody}${include}`;
 
             let args = argsBody ? encodeURIComponent(argsBody) : '';
-            let name = projectName === 'MyApp' ? '' : projectName;
             $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Request=${M.getOpName()}&Args=${args}&Name=${name}`;
             gapi.savetodrive.render('savetodrive-div', {
                 src: $notebook.href,
@@ -1523,7 +1522,7 @@ function updateDownload() {
                 ? ` -include "${selectedOption.value}"`
                 : '';
             $jupyterLabel.title = $jupyterLabel.innerHTML = `x jupyter-${M.lang} ${M.scheme}://${M.baseUrl}${include}`;
-            $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Name=${projectName === 'MyApp' ? '' : projectName}`;
+            $notebook.href = `/json/reply/CreateNotebook?Lang=${M.lang}&Slug=${M.slug}&IncludeTypes=${selectedOption.value}&Name=${name}`;
             gapi.savetodrive.render('savetodrive-div', {
                 src: $notebook.href,
                 filename: ext(name || `${M.slug}${tag ? '-' + tag : ''}`,'.ipynb'),
