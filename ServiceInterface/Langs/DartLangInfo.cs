@@ -37,10 +37,10 @@ void main(List<String> arguments) async {
 description: {DESCRIPTION}
 
 environment:
-  sdk: '>=2.8.1 <3.0.0'
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
-  servicestack: ^1.0.30
+  servicestack: ^2.0.0
 
 dev_dependencies:
 #  pedantic: ^1.9.0",
