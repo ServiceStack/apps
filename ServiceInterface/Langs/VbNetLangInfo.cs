@@ -81,6 +81,9 @@ End Module
         public override string RequestBodyFilter(string assignments)
         {
             var to = assignments.TrimEnd();
+            if (string.IsNullOrEmpty(to))
+                return "";
+            
             if (to.EndsWith(","))
                 to = to.Substring(0, to.Length - 1);
 
