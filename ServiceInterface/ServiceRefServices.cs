@@ -91,7 +91,7 @@ namespace Apps.ServiceInterface
                     {
                         var prop = props.FirstOrDefault(x =>
                             string.Equals(x.Name, entry.Key, StringComparison.OrdinalIgnoreCase));
-                        var propType = prop?.Type != null ? meta.FindType(prop.Type, prop.TypeNamespace) : null;
+                        var propType = prop?.Type != null ? meta.FindType(prop.Type, prop.Namespace) : null;
                         if (propType != null)
                             types.Add(propType.Name);
                     }

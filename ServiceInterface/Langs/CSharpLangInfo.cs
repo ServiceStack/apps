@@ -18,7 +18,7 @@ namespace Apps.ServiceInterface.Langs
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
 
