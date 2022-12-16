@@ -23,8 +23,8 @@ public class CSharpLangInfo : LangInfo
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include=""ServiceStack.Client"" Version=""5.*"" />
-    <PackageReference Include=""ServiceStack.Common"" Version=""5.*"" />
+    <PackageReference Include=""ServiceStack.Client"" Version=""6.*"" />
+    <PackageReference Include=""ServiceStack.Common"" Version=""6.*"" />
   </ItemGroup>
 
 </Project>",
