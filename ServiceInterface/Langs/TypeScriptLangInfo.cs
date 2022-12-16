@@ -5,17 +5,17 @@ using ServiceStack;
 using ServiceStack.NativeTypes.TypeScript;
 using ServiceStack.Text.Common;
 
-namespace Apps.ServiceInterface.Langs
+namespace Apps.ServiceInterface.Langs;
+
+public class TypeScriptLangInfo : LangInfo
 {
-    public class TypeScriptLangInfo : LangInfo
+    public TypeScriptLangInfo()
     {
-        public TypeScriptLangInfo()
-        {
-            Code = "typescript";
-            Name = "TypeScript";
-            Ext = "ts";
-            Files = new Dictionary<string, string> {
-                ["package.json"] = @"{
+        Code = "typescript";
+        Name = "TypeScript";
+        Ext = "ts";
+        Files = new Dictionary<string, string> {
+            ["package.json"] = @"{
   ""name"": ""my-app"",
   ""version"": ""1.0.0"",
   ""description"": ""{DESCRIPTION}"",
@@ -34,13 +34,13 @@ namespace Apps.ServiceInterface.Langs
     ""typescript"": ""^4.1.5""
   }
 }",
-                ["tsconfig.json"] = @"{
+            ["tsconfig.json"] = @"{
     ""compilerOptions"": {
         ""target"": ""es5"",
         ""lib"": [""ES2015"",""DOM""]
     }
 }",
-                ["index.ts"] = @"import { JsonServiceClient, Inspect } from '@servicestack/client';
+            ["index.ts"] = @"import { JsonServiceClient, Inspect } from '@servicestack/client';
 {API_COMMENT}import { {TYPES} } from './dtos';
 
 let client = new JsonServiceClient('{BASE_URL}');
@@ -55,35 +55,34 @@ let client = new JsonServiceClient('{BASE_URL}');
 
 })();
 ",
-            };
-            InspectVarsResponse = "Inspect.vars({ response });";
-            RequiresAuthTemplate = @"
+        };
+        InspectVarsResponse = "Inspect.vars({ response });";
+        RequiresAuthTemplate = @"
     // Authentication is required
     // client.post(new Authenticate({ 
     //     provider: 'credentials',
     //     userName: '...',
     //     password: '...'}));";
-        }
-        private TypeScriptGenerator Gen => new(new MetadataTypesConfig());
-        public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
-
-        public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
-            $"        {Gen.GetPropertyName(prop.Name)}: {Value(prop.Type,propValue)},";
-
-        public override string Value(string typeName, string value) => typeName switch {
-            nameof(Double) => Float(value),
-            nameof(Single) => Float(value),
-            nameof(Decimal) => Float(value),
-            _ => value
-        };
-
-        public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
-            "[" + collectionBody + "]";
-        public override string GetByteArrayLiteral(byte[] bytes) => $"\"{Convert.ToBase64String(bytes)}\"";
-
-        // public override string GetDateTimeLiteral(string value) => New($"Date('{ISO8601(value)}')");
-        public override string GetDateTimeLiteral(string value) => $"\"{ISO8601(value)}\"";
-        public override string GetTimeSpanLiteral(string value) => $"\"{value.ConvertTo<TimeSpan>():c}\"";
-        public override string GetGuidLiteral(string value) => $"\"{value.ConvertTo<Guid>():D}\"";
     }
+    private TypeScriptGenerator Gen => new(new MetadataTypesConfig());
+    public override string GetTypeName(string typeName, string[] genericArgs) => Gen.Type(typeName, genericArgs);
+
+    public override string GetPropertyAssignment(MetadataPropertyType prop, string propValue) =>
+        $"        {Gen.GetPropertyName(prop.Name)}: {Value(prop.Type,propValue)},";
+
+    public override string Value(string typeName, string value) => typeName switch {
+        nameof(Double) => Float(value),
+        nameof(Single) => Float(value),
+        nameof(Decimal) => Float(value),
+        _ => value
+    };
+
+    public override string GetCollectionLiteral(string collectionBody, string collectionType, string elementType) =>
+        "[" + collectionBody + "]";
+    public override string GetByteArrayLiteral(byte[] bytes) => $"\"{Convert.ToBase64String(bytes)}\"";
+
+    // public override string GetDateTimeLiteral(string value) => New($"Date('{ISO8601(value)}')");
+    public override string GetDateTimeLiteral(string value) => $"\"{ISO8601(value)}\"";
+    public override string GetTimeSpanLiteral(string value) => $"\"{value.ConvertTo<TimeSpan>():c}\"";
+    public override string GetGuidLiteral(string value) => $"\"{value.ConvertTo<Guid>():D}\"";
 }
