@@ -155,7 +155,8 @@ pre.copied i { opacity: .4; }
         <div class="text-center">
             <div class="error-summary invalid-feedback my-1"></div>
             <small class="text-base text-gray-400 hide-fullscreen">
-                try <a href="#techstacks.io">techstacks.io</a>,
+                try <a href="#api.blazordiffusion.com">api.blazordiffusion.com</a>,
+                <a href="#techstacks.io">techstacks.io</a>,
                 <a href="#chinook.locode.dev">chinook</a>,
                 <a href="#northwind.netcore.io">northwind</a>,
                 <a href="#covid-vac-watch.netcore.io">vaccines-watch</a>
@@ -231,7 +232,7 @@ pre.copied i { opacity: .4; }
         
         <div id="customize-embed" class="flex">
             <div class="flex-1">
-                <div id="tags" class="mt-2 flex" style="min-height:1.5rem"></div>
+                <div id="tags" class="flex flex-wrap" style="min-height:1.5rem"></div>
                 <label id="choose-api">
                     <input id="txtRequest" type="text" spellcheck="false" placeholder="Choose API"
                            class="flex-grow border rounded-none mt-1 py-2 px-3 text-grey-900 text-3xl">
@@ -1025,7 +1026,7 @@ function updateLang() {
     let tagNames = M.getUniqueTags();
     let sb = new StringBuffer();
     tagNames.forEach(tag =>
-        sb.append(`<div class="tag${tag === M.tag ? ' active' : ''} text-xs inline-flex items-center font-bold leading-4 uppercase px-3 py-1 mr-1 bg-blue-100 text-blue-500 rounded-full cursor-pointer" 
+        sb.append(`<div class="tag${tag === M.tag ? ' active' : ''} mt-2 text-xs inline-flex items-center font-bold leading-4 uppercase px-3 py-1 mr-1 bg-blue-100 text-blue-500 rounded-full cursor-pointer" 
                         data-tag="${tag}" data-click="selectTag">${tag}</div>`));
     $("#tags").innerHTML = sb.toString();
 
