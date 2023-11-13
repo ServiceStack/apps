@@ -3,7 +3,6 @@ services:
   ${APP_NAME}:
     image: ghcr.io/${IMAGE_REPO}:${RELEASE_VERSION}
     restart: always
-    network_mode: bridge
     ports:
       - "80"
     environment:
@@ -12,6 +11,11 @@ services:
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
     volumes:
       - ${APP_NAME}-mydb:/app/App_Data
+
+networks:
+  default:
+    external: true
+    name: nginx
 
 volumes:
   ${APP_NAME}-mydb:
