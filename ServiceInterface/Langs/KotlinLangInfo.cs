@@ -29,13 +29,13 @@ fun main(args: Array<String>) {
 ",
             ["gradle\\wrapper\\gradle-wrapper.properties"] = @"distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-6.7-bin.zip
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
 zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists",
             ["build.gradle.kts"] = @"plugins {
     java
     application
-    kotlin(""jvm"") version ""1.4.21""
+    kotlin(""jvm"") version ""1.9.0""
 }
 
 group = ""myapp""
@@ -55,8 +55,8 @@ tasks.test {
 
 dependencies {
     implementation(kotlin(""stdlib""))
-    implementation(""com.google.code.gson:gson:2.8.6"")
-    implementation(""net.servicestack:client:1.0.49"")
+    implementation(""com.google.code.gson:gson:2.8.9"")
+    implementation(""net.servicestack:client:1.1.0"")
     testImplementation(platform(""org.junit:junit-bom:5.7.0""))
     testImplementation(""org.junit.jupiter:junit-jupiter"")
 }

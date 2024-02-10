@@ -25,7 +25,7 @@ import '../lib/dtos.dart';
 
 void main(List<String> arguments) async {
 
-  var client = ClientFactory.create('{BASE_URL}');{REQUIRES_AUTH}
+  var client = ClientFactory.api('{BASE_URL}');{REQUIRES_AUTH}
 
   {API_COMMENT}var response = await client.send({REQUEST}(){REQUEST_BODY});
 
@@ -40,7 +40,7 @@ environment:
   sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
-  servicestack: ^2.0.0
+  servicestack: ^2.0.3
 
 dev_dependencies:
 #  pedantic: ^1.9.0",

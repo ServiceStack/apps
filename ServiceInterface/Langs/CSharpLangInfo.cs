@@ -23,8 +23,8 @@ public class CSharpLangInfo : LangInfo
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include=""ServiceStack.Client"" Version=""6.*"" />
-    <PackageReference Include=""ServiceStack.Common"" Version=""6.*"" />
+    <PackageReference Include=""ServiceStack.Client"" Version=""8.*"" />
+    <PackageReference Include=""ServiceStack.Common"" Version=""8.*"" />
   </ItemGroup>
 
 </Project>",
@@ -34,7 +34,7 @@ using ServiceStack;
 using ServiceStack.Text;
 using MyApp;
 
-var client = new JsonServiceClient(""{BASE_URL}"");{REQUIRES_AUTH}
+var client = new JsonApiClient(""{BASE_URL}"");{REQUIRES_AUTH}
 
 {API_COMMENT}var response = client.Send(new {REQUEST} {{REQUEST_BODY}
 {API_COMMENT}});

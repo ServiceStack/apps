@@ -27,11 +27,11 @@ public class TypeScriptLangInfo : LangInfo
   ""author"": """",
   ""license"": ""ISC"",
   ""dependencies"": {
-    ""@servicestack/client"": ""^1.0.49""
+    ""@servicestack/client"": ""^2.1.1""
   },
   ""devDependencies"": {
-    ""ts-node"": ""^9.1.1"",
-    ""typescript"": ""^4.1.5""
+    ""ts-node"": ""^10.9.2"",
+    ""typescript"": ""^5.3.3""
   }
 }",
             ["tsconfig.json"] = @"{

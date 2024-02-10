@@ -17,7 +17,7 @@ public class PythonLangInfo : LangInfo
         LineComment = "#";
         DtosPathPrefix = "my_app\\";
         Files = new Dictionary<string, string> {
-            ["requirements.txt"] = @"servicestack>=0.1.1",
+            ["requirements.txt"] = @"servicestack>=0.1.3",
             ["setup.py"] = @"from setuptools import setup, find_packages
 
 setup(

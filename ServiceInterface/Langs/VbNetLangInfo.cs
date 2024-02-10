@@ -23,8 +23,8 @@ public class VbNetLangInfo : LangInfo
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include=""ServiceStack.Client"" Version=""6.*"" />
-    <PackageReference Include=""ServiceStack.Common"" Version=""6.*"" />
+    <PackageReference Include=""ServiceStack.Client"" Version=""8.*"" />
+    <PackageReference Include=""ServiceStack.Common"" Version=""8.*"" />
   </ItemGroup>
 
 </Project>",
@@ -38,7 +38,7 @@ Module Program
 
     Sub Main(args As String())
 
-        Dim client = New JsonServiceClient(""{BASE_URL}""){REQUIRES_AUTH}
+        Dim client = New JsonApiClient(""{BASE_URL}""){REQUIRES_AUTH}
 
         {API_COMMENT}Dim response = client.Send(New {REQUEST}(){REQUEST_BODY})
             

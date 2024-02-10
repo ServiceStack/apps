@@ -25,8 +25,8 @@ public class FSharpLangInfo : LangInfo
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include=""ServiceStack.Client"" Version=""6.*"" />
-    <PackageReference Include=""ServiceStack.Common"" Version=""6.*"" />
+    <PackageReference Include=""ServiceStack.Client"" Version=""8.*"" />
+    <PackageReference Include=""ServiceStack.Common"" Version=""8.*"" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,7 +47,7 @@ module Program =
     [<EntryPoint>]
     let main args =
 
-        let client = new JsonServiceClient(""{BASE_URL}""){REQUIRES_AUTH}
+        let client = new JsonApiClient(""{BASE_URL}""){REQUIRES_AUTH}
 
         {API_COMMENT}let response = client.Send(new {REQUEST}({REQUEST_BODY}))
 
